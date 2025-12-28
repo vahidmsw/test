@@ -1,0 +1,1116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Split Bill Calculator</title>
+  <style>
+    :root {
+      --bg1: #87CEEB;
+      --bg2: #98D8C8;
+      --card: #ffffff;
+      --text: #2c3e50;
+      --muted: #7f8c8d;
+      --primary: #3498db;
+      --primary2: #2980b9;
+      --danger: #e74c3c;
+      --border: rgba(44, 62, 80, 0.15);
+      --shadow: 0 10px 30px rgba(0, 0, 0, 0.12);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      padding: 24px;
+      background: linear-gradient(to bottom, var(--bg1), var(--bg2));
+      font-family: Arial, sans-serif;
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    .app {
+      max-width: 1100px;
+      margin: 0 auto;
+      background: var(--card);
+      border-radius: 14px;
+      box-shadow: var(--shadow);
+      padding: 18px;
+    }
+
+    header {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 14px;
+      margin-bottom: 14px;
+    }
+
+    header h1 {
+      font-size: 20px;
+      margin: 0;
+      letter-spacing: 0.2px;
+    }
+
+    header .sub {
+      margin: 4px 0 0;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .top-actions {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    button {
+      appearance: none;
+      border: none;
+      background: var(--primary);
+      color: #fff;
+      padding: 10px 12px;
+      border-radius: 10px;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 14px;
+    }
+
+    button:hover { background: var(--primary2); }
+
+    button.secondary {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--text);
+    }
+
+    button.secondary:hover { background: rgba(52, 152, 219, 0.10); }
+
+    button.danger {
+      background: var(--danger);
+    }
+
+    button.danger:hover {
+      filter: brightness(0.95);
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 1.1fr 1.4fr;
+      gap: 14px;
+    }
+
+    @media (max-width: 980px) {
+      body { padding: 14px; }
+      .grid { grid-template-columns: 1fr; }
+    }
+
+    .card {
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 14px;
+    }
+
+    .card h2 {
+      margin: 0 0 10px;
+      font-size: 16px;
+    }
+
+    .row {
+      display: grid;
+      grid-template-columns: 1fr 140px 44px;
+      gap: 8px;
+      margin-bottom: 8px;
+      align-items: center;
+    }
+
+    .row.items {
+      grid-template-columns: 1.2fr 120px 180px 1.2fr 44px;
+    }
+
+    @media (max-width: 980px) {
+      .row { grid-template-columns: 1fr 120px 44px; }
+      .row.items { grid-template-columns: 1fr 120px 1fr; grid-auto-rows: auto; }
+      .row.items .col-span { grid-column: 1 / -1; }
+    }
+
+    input[type="text"],
+    input[type="number"],
+    select {
+      width: 100%;
+      padding: 10px 10px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      outline: none;
+      font-size: 14px;
+      background: #fff;
+      color: var(--text);
+    }
+
+    input[type="number"] { text-align: right; }
+
+    .hint {
+      font-size: 12px;
+      color: var(--muted);
+      margin-top: 6px;
+      line-height: 1.35;
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      padding: 8px 10px;
+      background: rgba(255, 255, 255, 0.7);
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    .totals {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin-top: 12px;
+    }
+
+    .kpi {
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 10px;
+    }
+
+    .kpi .label { font-size: 12px; color: var(--muted); }
+    .kpi .value { font-size: 18px; font-weight: 800; margin-top: 4px; }
+
+    .results {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 12px;
+    }
+
+    .table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 14px;
+    }
+
+    .table th,
+    .table td {
+      padding: 10px 8px;
+      border-bottom: 1px solid var(--border);
+      text-align: left;
+      vertical-align: top;
+    }
+
+    .table th {
+      font-size: 12px;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+    }
+
+    .right { text-align: right; }
+
+    .ok { color: #1f7a1f; font-weight: 700; }
+    .warn { color: #b45309; font-weight: 700; }
+    .bad { color: #b91c1c; font-weight: 700; }
+
+    .settlement {
+      padding: 12px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: rgba(52, 152, 219, 0.06);
+    }
+
+    .settlement h3 {
+      margin: 0 0 8px;
+      font-size: 14px;
+    }
+
+    .settlement ol {
+      margin: 0;
+      padding-left: 18px;
+    }
+
+    .toast {
+      position: fixed;
+      left: 50%;
+      bottom: 18px;
+      transform: translateX(-50%);
+      background: rgba(44, 62, 80, 0.92);
+      color: #fff;
+      padding: 10px 12px;
+      border-radius: 10px;
+      font-size: 13px;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 160ms ease;
+      max-width: 92vw;
+    }
+
+    .toast.show { opacity: 1; }
+
+    .inline {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      align-items: center;
+      margin-top: 10px;
+    }
+
+    .inline label {
+      display: inline-flex;
+      gap: 8px;
+      align-items: center;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .inline input[type="number"] { width: 120px; }
+
+    .tiny {
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .chipbox {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .chip {
+      display: inline-flex;
+      gap: 8px;
+      align-items: center;
+      padding: 8px 10px;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      background: #fff;
+      font-size: 13px;
+      color: var(--text);
+      user-select: none;
+    }
+
+    .chip input { margin: 0; }
+
+    .mobile-actions {
+      display: none;
+      position: sticky;
+      bottom: 0;
+      z-index: 50;
+      margin: 14px -18px -18px;
+      padding: 12px 14px;
+      padding-bottom: calc(12px + env(safe-area-inset-bottom));
+      background: rgba(255, 255, 255, 0.92);
+      backdrop-filter: blur(10px);
+      border-top: 1px solid var(--border);
+    }
+
+    .mobile-actions .bar {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 10px;
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+
+    .mobile-actions button {
+      padding: 14px 12px;
+      font-size: 15px;
+      border-radius: 12px;
+    }
+
+    @media (max-width: 520px) {
+      body {
+        padding: 10px;
+      }
+
+      .app {
+        padding: 14px;
+        border-radius: 12px;
+      }
+
+      header {
+        gap: 8px;
+      }
+
+      header h1 {
+        font-size: 18px;
+      }
+
+      header .sub {
+        font-size: 12px;
+      }
+
+      .top-actions {
+        display: none;
+      }
+
+      .grid {
+        grid-template-columns: 1fr;
+      }
+
+      .row {
+        grid-template-columns: 1fr 120px 44px;
+        gap: 10px;
+      }
+
+      .row.items {
+        grid-template-columns: 1fr 1fr;
+        grid-auto-rows: auto;
+      }
+
+      .row.items > :nth-child(3) {
+        grid-column: 1 / -1;
+      }
+
+      .row.items .col-span {
+        grid-column: 1 / -1;
+      }
+
+      input[type="text"],
+      input[type="number"],
+      select {
+        padding: 12px 12px;
+        font-size: 16px;
+      }
+
+      button {
+        padding: 12px 12px;
+        font-size: 15px;
+      }
+
+      .chip {
+        padding: 10px 12px;
+        font-size: 14px;
+      }
+
+      .totals {
+        grid-template-columns: 1fr;
+      }
+
+      .mobile-actions {
+        display: block;
+      }
+
+      .toast {
+        bottom: calc(90px + env(safe-area-inset-bottom));
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header>
+      <div>
+        <h1>Split Bill Calculator</h1>
+        <div class="sub">Offline, private, and shareable via a single link (no account, no server).</div>
+      </div>
+      <div class="top-actions">
+        <span class="pill" id="shareStatus">No shared link loaded</span>
+        <button class="secondary" id="btnCopyLink" type="button">Copy share link</button>
+        <button class="secondary" id="btnReset" type="button">Reset</button>
+      </div>
+    </header>
+
+    <div class="grid">
+      <section class="card">
+        <h2>People</h2>
+        <div id="people"></div>
+        <div class="inline">
+          <button id="btnAddPerson" type="button">Add person</button>
+        </div>
+        <div class="hint">Enter what each person already paid (optional). Items can also specify who paid.</div>
+
+        <div class="inline" style="margin-top: 12px;">
+          <label>Tip % <input id="tipPct" type="number" min="0" step="0.1" value="0" /></label>
+          <label>Tax % <input id="taxPct" type="number" min="0" step="0.1" value="0" /></label>
+          <label>Rounding <select id="rounding">
+            <option value="none">No rounding</option>
+            <option value="0.01">Nearest 0.01</option>
+            <option value="0.05">Nearest 0.05</option>
+            <option value="0.10">Nearest 0.10</option>
+            <option value="0.50">Nearest 0.50</option>
+            <option value="1">Nearest 1</option>
+          </select></label>
+        </div>
+        <div class="hint">Rounding applies to each person’s final net, then the app rebalances by adjusting the largest creditor/debtor so totals still match.</div>
+      </section>
+
+      <section class="card">
+        <h2>Bill items</h2>
+        <div id="items"></div>
+        <div class="inline">
+          <button id="btnAddItem" type="button">Add item</button>
+          <button id="btnCalculate" type="button">Recalculate</button>
+        </div>
+        <div class="hint">For each item: amount, who paid, and who shared it.</div>
+
+        <div class="totals">
+          <div class="kpi"><div class="label">Subtotal</div><div class="value" id="kpiSubtotal">0.00</div></div>
+          <div class="kpi"><div class="label">Tip + Tax</div><div class="value" id="kpiExtras">0.00</div></div>
+          <div class="kpi"><div class="label">Total</div><div class="value" id="kpiTotal">0.00</div></div>
+        </div>
+      </section>
+    </div>
+
+    <section class="card" style="margin-top: 14px;">
+      <h2>Results</h2>
+      <div class="results">
+        <div>
+          <table class="table" id="resultTable">
+            <thead>
+              <tr>
+                <th>Person</th>
+                <th class="right">Paid</th>
+                <th class="right">Share</th>
+                <th class="right">Net</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+          <div class="tiny" id="balanceNote"></div>
+        </div>
+
+        <div class="settlement" id="settlementBox">
+          <h3>Suggested settlement (minimal transfers)</h3>
+          <ol id="settlementList"></ol>
+          <div class="tiny" id="settlementMeta"></div>
+        </div>
+      </div>
+    </section>
+
+    <div class="mobile-actions" aria-label="Quick actions">
+      <div class="bar">
+        <button id="btnCalculateMobile" type="button">Recalculate</button>
+        <button class="secondary" id="btnCopyLinkMobile" type="button">Copy link</button>
+        <button class="secondary" id="btnResetMobile" type="button">Reset</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    const dom = {
+      people: document.getElementById('people'),
+      items: document.getElementById('items'),
+      btnAddPerson: document.getElementById('btnAddPerson'),
+      btnAddItem: document.getElementById('btnAddItem'),
+      btnCalculate: document.getElementById('btnCalculate'),
+      btnCopyLink: document.getElementById('btnCopyLink'),
+      btnReset: document.getElementById('btnReset'),
+      tipPct: document.getElementById('tipPct'),
+      taxPct: document.getElementById('taxPct'),
+      rounding: document.getElementById('rounding'),
+      kpiSubtotal: document.getElementById('kpiSubtotal'),
+      kpiExtras: document.getElementById('kpiExtras'),
+      kpiTotal: document.getElementById('kpiTotal'),
+      resultTableBody: document.querySelector('#resultTable tbody'),
+      settlementList: document.getElementById('settlementList'),
+      settlementMeta: document.getElementById('settlementMeta'),
+      settlementBox: document.getElementById('settlementBox'),
+      toast: document.getElementById('toast'),
+      shareStatus: document.getElementById('shareStatus'),
+      balanceNote: document.getElementById('balanceNote'),
+    };
+
+    function uid() {
+      return Math.random().toString(16).slice(2) + Date.now().toString(16);
+    }
+
+    function roundTo(n, step) {
+      if (!step || step <= 0) return n;
+      return Math.round(n / step) * step;
+    }
+
+    function money(n) {
+      const v = Number.isFinite(n) ? n : 0;
+      return v.toFixed(2);
+    }
+
+    function showToast(msg) {
+      dom.toast.textContent = msg;
+      dom.toast.classList.add('show');
+      window.setTimeout(() => dom.toast.classList.remove('show'), 1600);
+    }
+
+    const state = {
+      people: [],
+      items: [],
+      tipPct: 0,
+      taxPct: 0,
+      rounding: 'none',
+    };
+
+    function normalizePeople() {
+      const names = new Set();
+      state.people = state.people.filter(p => p && typeof p.name === 'string');
+      state.people.forEach(p => {
+        p.name = p.name.trim() || 'Person';
+        let base = p.name;
+        let i = 2;
+        while (names.has(p.name)) {
+          p.name = `${base} ${i++}`;
+        }
+        names.add(p.name);
+        p.paid = Number(p.paid) || 0;
+      });
+    }
+
+    function safePeopleIndexById() {
+      const map = new Map();
+      state.people.forEach((p, i) => map.set(p.id, i));
+      return map;
+    }
+
+    function addPerson(name = '', paid = 0) {
+      state.people.push({ id: uid(), name, paid });
+    }
+
+    function addItem(desc = '', amount = 0, paidById = null, sharedByIds = null) {
+      const fallbackPaid = paidById || (state.people[0] ? state.people[0].id : null);
+      const fallbackShared = sharedByIds || state.people.map(p => p.id);
+      state.items.push({ id: uid(), desc, amount, paidById: fallbackPaid, sharedByIds: fallbackShared });
+    }
+
+    function encodeHash(obj) {
+      const json = JSON.stringify(obj);
+      const b64 = btoa(unescape(encodeURIComponent(json)));
+      return b64.replace(/=+$/g, '').replace(/\+/g, '-').replace(/\//g, '_');
+    }
+
+    function decodeHash(hash) {
+      const raw = (hash || '').replace(/^#/, '').trim();
+      if (!raw) return null;
+      const b64 = raw.replace(/-/g, '+').replace(/_/g, '/');
+      const padded = b64 + '==='.slice((b64.length + 3) % 4);
+      const json = decodeURIComponent(escape(atob(padded)));
+      return JSON.parse(json);
+    }
+
+    function snapshot() {
+      normalizePeople();
+      const cleanedItems = state.items.map(it => ({
+        id: it.id,
+        desc: String(it.desc || ''),
+        amount: Number(it.amount) || 0,
+        paidById: it.paidById,
+        sharedByIds: Array.isArray(it.sharedByIds) ? it.sharedByIds.slice() : [],
+      }));
+
+      return {
+        v: 1,
+        people: state.people.map(p => ({ id: p.id, name: p.name, paid: Number(p.paid) || 0 })),
+        items: cleanedItems,
+        tipPct: Number(state.tipPct) || 0,
+        taxPct: Number(state.taxPct) || 0,
+        rounding: state.rounding || 'none',
+      };
+    }
+
+    function applySnapshot(snap) {
+      if (!snap || typeof snap !== 'object') return false;
+      if (!Array.isArray(snap.people) || snap.people.length === 0) return false;
+
+      state.people = snap.people.map(p => ({
+        id: String(p.id || uid()),
+        name: String(p.name || ''),
+        paid: Number(p.paid) || 0,
+      }));
+
+      state.items = Array.isArray(snap.items) ? snap.items.map(it => ({
+        id: String(it.id || uid()),
+        desc: String(it.desc || ''),
+        amount: Number(it.amount) || 0,
+        paidById: it.paidById || (state.people[0] ? state.people[0].id : null),
+        sharedByIds: Array.isArray(it.sharedByIds) ? it.sharedByIds.slice() : state.people.map(p => p.id),
+      })) : [];
+
+      state.tipPct = Number(snap.tipPct) || 0;
+      state.taxPct = Number(snap.taxPct) || 0;
+      state.rounding = snap.rounding || 'none';
+
+      normalizePeople();
+      dom.tipPct.value = String(state.tipPct);
+      dom.taxPct.value = String(state.taxPct);
+      dom.rounding.value = String(state.rounding);
+      return true;
+    }
+
+    function setHashFromState() {
+      const snap = snapshot();
+      const h = encodeHash(snap);
+      const next = `#${h}`;
+      if (window.location.hash !== next) {
+        history.replaceState(null, '', next);
+      }
+    }
+
+    function copyShareLink() {
+      setHashFromState();
+      const url = window.location.href;
+      navigator.clipboard.writeText(url).then(
+        () => showToast('Share link copied'),
+        () => showToast('Could not copy link (browser permission)')
+      );
+    }
+
+    function renderPeople() {
+      dom.people.innerHTML = '';
+      state.people.forEach((p) => {
+        const row = document.createElement('div');
+        row.className = 'row';
+
+        const name = document.createElement('input');
+        name.type = 'text';
+        name.value = p.name;
+        name.placeholder = 'Name';
+        name.addEventListener('input', () => {
+          p.name = name.value;
+          renderItems();
+          calculateAndRender();
+        });
+
+        const paid = document.createElement('input');
+        paid.type = 'number';
+        paid.step = '0.01';
+        paid.min = '0';
+        paid.value = String(p.paid || 0);
+        paid.addEventListener('input', () => {
+          p.paid = Number(paid.value) || 0;
+          calculateAndRender();
+        });
+
+        const del = document.createElement('button');
+        del.className = 'danger';
+        del.type = 'button';
+        del.textContent = '×';
+        del.title = 'Remove person';
+        del.addEventListener('click', () => {
+          const idx = state.people.findIndex(x => x.id === p.id);
+          if (idx >= 0) state.people.splice(idx, 1);
+          if (state.people.length === 0) {
+            addPerson('Person 1', 0);
+          }
+          state.items.forEach(it => {
+            if (!state.people.some(pp => pp.id === it.paidById)) {
+              it.paidById = state.people[0].id;
+            }
+            it.sharedByIds = (it.sharedByIds || []).filter(id => state.people.some(pp => pp.id === id));
+            if (!it.sharedByIds || it.sharedByIds.length === 0) {
+              it.sharedByIds = state.people.map(pp => pp.id);
+            }
+          });
+          renderPeople();
+          renderItems();
+          calculateAndRender();
+        });
+
+        row.appendChild(name);
+        row.appendChild(paid);
+        row.appendChild(del);
+        dom.people.appendChild(row);
+      });
+    }
+
+    function renderChipSelector(container, item) {
+      container.innerHTML = '';
+      const chipBox = document.createElement('div');
+      chipBox.className = 'chipbox';
+
+      const allIds = state.people.map(p => p.id);
+      const current = new Set(Array.isArray(item.sharedByIds) ? item.sharedByIds : []);
+
+      allIds.forEach((pid) => {
+        const person = state.people.find(p => p.id === pid);
+        const chip = document.createElement('label');
+        chip.className = 'chip';
+        const cb = document.createElement('input');
+        cb.type = 'checkbox';
+        cb.checked = current.has(pid);
+        cb.addEventListener('change', () => {
+          if (cb.checked) current.add(pid);
+          else current.delete(pid);
+          item.sharedByIds = Array.from(current);
+          if (!item.sharedByIds.length) {
+            cb.checked = true;
+            current.add(pid);
+            item.sharedByIds = Array.from(current);
+            showToast('An item must be shared by at least 1 person');
+          }
+          calculateAndRender();
+        });
+
+        const text = document.createElement('span');
+        text.textContent = person ? person.name : 'Person';
+
+        chip.appendChild(cb);
+        chip.appendChild(text);
+        chipBox.appendChild(chip);
+      });
+
+      container.appendChild(chipBox);
+    }
+
+    function renderItems() {
+      dom.items.innerHTML = '';
+      state.items.forEach((it) => {
+        const row = document.createElement('div');
+        row.className = 'row items';
+
+        const desc = document.createElement('input');
+        desc.type = 'text';
+        desc.value = it.desc;
+        desc.placeholder = 'Description (e.g., Pizza)';
+        desc.addEventListener('input', () => {
+          it.desc = desc.value;
+          setHashFromState();
+        });
+
+        const amount = document.createElement('input');
+        amount.type = 'number';
+        amount.step = '0.01';
+        amount.min = '0';
+        amount.value = String(it.amount || 0);
+        amount.addEventListener('input', () => {
+          it.amount = Number(amount.value) || 0;
+          calculateAndRender();
+        });
+
+        const paidBy = document.createElement('select');
+        state.people.forEach(p => {
+          const opt = document.createElement('option');
+          opt.value = p.id;
+          opt.textContent = p.name;
+          paidBy.appendChild(opt);
+        });
+        if (!state.people.some(p => p.id === it.paidById) && state.people[0]) {
+          it.paidById = state.people[0].id;
+        }
+        paidBy.value = it.paidById;
+        paidBy.addEventListener('change', () => {
+          it.paidById = paidBy.value;
+          calculateAndRender();
+        });
+
+        const sharedWrap = document.createElement('div');
+        sharedWrap.className = 'col-span';
+        renderChipSelector(sharedWrap, it);
+
+        const del = document.createElement('button');
+        del.className = 'danger';
+        del.type = 'button';
+        del.textContent = '×';
+        del.title = 'Remove item';
+        del.addEventListener('click', () => {
+          const idx = state.items.findIndex(x => x.id === it.id);
+          if (idx >= 0) state.items.splice(idx, 1);
+          renderItems();
+          calculateAndRender();
+        });
+
+        row.appendChild(desc);
+        row.appendChild(amount);
+        row.appendChild(paidBy);
+        row.appendChild(sharedWrap);
+        row.appendChild(del);
+        dom.items.appendChild(row);
+      });
+    }
+
+    function compute() {
+      normalizePeople();
+      const idxById = safePeopleIndexById();
+
+      const paid = new Array(state.people.length).fill(0);
+      const share = new Array(state.people.length).fill(0);
+
+      let subtotal = 0;
+      for (const it of state.items) {
+        const amt = Math.max(0, Number(it.amount) || 0);
+        subtotal += amt;
+
+        const payerIndex = idxById.get(it.paidById);
+        if (payerIndex !== undefined) {
+          paid[payerIndex] += amt;
+        }
+
+        const sharedIds = Array.isArray(it.sharedByIds) ? it.sharedByIds.filter(id => idxById.has(id)) : [];
+        const n = sharedIds.length || 0;
+        if (n > 0) {
+          const per = amt / n;
+          for (const pid of sharedIds) {
+            const si = idxById.get(pid);
+            if (si !== undefined) share[si] += per;
+          }
+        }
+      }
+
+      const tipPct = Math.max(0, Number(state.tipPct) || 0) / 100;
+      const taxPct = Math.max(0, Number(state.taxPct) || 0) / 100;
+      const extrasTotal = subtotal * (tipPct + taxPct);
+
+      const extraFactor = subtotal > 0 ? (extrasTotal / subtotal) : 0;
+      for (let i = 0; i < share.length; i++) {
+        share[i] += share[i] * extraFactor;
+      }
+
+      for (let i = 0; i < state.people.length; i++) {
+        paid[i] += Math.max(0, Number(state.people[i].paid) || 0);
+      }
+
+      const net = paid.map((p, i) => p - share[i]);
+
+      const step = state.rounding === 'none' ? 0 : Number(state.rounding);
+      let netRounded = net.slice();
+      if (step && step > 0) {
+        netRounded = netRounded.map(v => roundTo(v, step));
+        const sum = netRounded.reduce((a, b) => a + b, 0);
+        const drift = -sum;
+        if (Math.abs(drift) >= 0.000001) {
+          const target = drift > 0
+            ? netRounded.map((v, i) => ({ i, v })).sort((a, b) => a.v - b.v)[0]
+            : netRounded.map((v, i) => ({ i, v })).sort((a, b) => b.v - a.v)[0];
+          netRounded[target.i] += drift;
+        }
+      }
+
+      const total = subtotal + extrasTotal;
+
+      return {
+        subtotal,
+        extrasTotal,
+        total,
+        paid,
+        share,
+        net: netRounded,
+        netUnrounded: net,
+      };
+    }
+
+    function buildSettlement(people, net) {
+      const eps = 0.005;
+      const creditors = [];
+      const debtors = [];
+
+      for (let i = 0; i < people.length; i++) {
+        const v = net[i];
+        if (v > eps) creditors.push({ i, amt: v });
+        else if (v < -eps) debtors.push({ i, amt: -v });
+      }
+
+      creditors.sort((a, b) => b.amt - a.amt);
+      debtors.sort((a, b) => b.amt - a.amt);
+
+      const tx = [];
+      let ci = 0;
+      let di = 0;
+
+      while (ci < creditors.length && di < debtors.length) {
+        const c = creditors[ci];
+        const d = debtors[di];
+        const x = Math.min(c.amt, d.amt);
+        if (x > eps) {
+          tx.push({ from: people[d.i].name, to: people[c.i].name, amount: x });
+          c.amt -= x;
+          d.amt -= x;
+        }
+        if (c.amt <= eps) ci++;
+        if (d.amt <= eps) di++;
+      }
+
+      return tx;
+    }
+
+    function calculateAndRender() {
+      state.tipPct = Number(dom.tipPct.value) || 0;
+      state.taxPct = Number(dom.taxPct.value) || 0;
+      state.rounding = dom.rounding.value || 'none';
+
+      const res = compute();
+
+      dom.kpiSubtotal.textContent = money(res.subtotal);
+      dom.kpiExtras.textContent = money(res.extrasTotal);
+      dom.kpiTotal.textContent = money(res.total);
+
+      dom.resultTableBody.innerHTML = '';
+      for (let i = 0; i < state.people.length; i++) {
+        const tr = document.createElement('tr');
+        const net = res.net[i];
+        const cls = Math.abs(net) < 0.01 ? 'ok' : (net > 0 ? 'ok' : 'bad');
+
+        const tdName = document.createElement('td');
+        tdName.textContent = state.people[i].name;
+
+        const tdPaid = document.createElement('td');
+        tdPaid.className = 'right';
+        tdPaid.textContent = money(res.paid[i]);
+
+        const tdShare = document.createElement('td');
+        tdShare.className = 'right';
+        tdShare.textContent = money(res.share[i]);
+
+        const tdNet = document.createElement('td');
+        tdNet.className = `right ${cls}`;
+        tdNet.textContent = money(net);
+
+        tr.appendChild(tdName);
+        tr.appendChild(tdPaid);
+        tr.appendChild(tdShare);
+        tr.appendChild(tdNet);
+        dom.resultTableBody.appendChild(tr);
+      }
+
+      const sumNet = res.net.reduce((a, b) => a + b, 0);
+      dom.balanceNote.textContent = Math.abs(sumNet) < 0.01
+        ? 'Balanced: nets sum to 0.'
+        : `Note: nets sum to ${money(sumNet)} (rounding or incomplete data).`;
+
+      const tx = buildSettlement(state.people, res.net);
+      dom.settlementList.innerHTML = '';
+      if (!tx.length) {
+        const li = document.createElement('li');
+        li.textContent = 'No transfers needed.';
+        dom.settlementList.appendChild(li);
+      } else {
+        tx.forEach(t => {
+          const li = document.createElement('li');
+          li.textContent = `${t.from} pays ${t.to}: ${money(t.amount)}`;
+          dom.settlementList.appendChild(li);
+        });
+      }
+
+      dom.settlementMeta.textContent = `Transfers: ${tx.length}. People: ${state.people.length}. Items: ${state.items.length}.`;
+
+      setHashFromState();
+    }
+
+    function resetApp() {
+      state.people = [];
+      state.items = [];
+      state.tipPct = 0;
+      state.taxPct = 0;
+      state.rounding = 'none';
+      dom.tipPct.value = '0';
+      dom.taxPct.value = '0';
+      dom.rounding.value = 'none';
+      addPerson('Person 1', 0);
+      addPerson('Person 2', 0);
+      addItem('Item 1', 0, state.people[0].id, state.people.map(p => p.id));
+      renderPeople();
+      renderItems();
+      calculateAndRender();
+      dom.shareStatus.textContent = 'No shared link loaded';
+      history.replaceState(null, '', window.location.pathname);
+      showToast('Reset done');
+    }
+
+    function initFromHashIfPresent() {
+      const snap = decodeHash(window.location.hash);
+      if (!snap) return false;
+      const ok = applySnapshot(snap);
+      if (ok) {
+        dom.shareStatus.textContent = 'Loaded from shared link';
+        return true;
+      }
+      return false;
+    }
+
+    function init() {
+      const loaded = initFromHashIfPresent();
+      if (!loaded) {
+        addPerson('Person 1', 0);
+        addPerson('Person 2', 0);
+        addItem('Item 1', 0, null, null);
+      }
+
+      dom.tipPct.value = String(state.tipPct);
+      dom.taxPct.value = String(state.taxPct);
+      dom.rounding.value = String(state.rounding);
+
+      renderPeople();
+      renderItems();
+      calculateAndRender();
+    }
+
+    dom.btnAddPerson.addEventListener('click', () => {
+      addPerson(`Person ${state.people.length + 1}`, 0);
+      state.items.forEach(it => {
+        if (!Array.isArray(it.sharedByIds)) it.sharedByIds = [];
+        if (!it.sharedByIds.includes(state.people[state.people.length - 1].id)) {
+          it.sharedByIds.push(state.people[state.people.length - 1].id);
+        }
+      });
+      renderPeople();
+      renderItems();
+      calculateAndRender();
+    });
+
+    dom.btnAddItem.addEventListener('click', () => {
+      addItem(`Item ${state.items.length + 1}`, 0, null, null);
+      renderItems();
+      calculateAndRender();
+    });
+
+    dom.btnCalculate.addEventListener('click', () => {
+      calculateAndRender();
+      showToast('Recalculated');
+    });
+
+    dom.btnCopyLink.addEventListener('click', () => {
+      copyShareLink();
+    });
+
+    dom.btnReset.addEventListener('click', () => {
+      resetApp();
+    });
+
+    const btnCalculateMobile = document.getElementById('btnCalculateMobile');
+    const btnCopyLinkMobile = document.getElementById('btnCopyLinkMobile');
+    const btnResetMobile = document.getElementById('btnResetMobile');
+
+    if (btnCalculateMobile) {
+      btnCalculateMobile.addEventListener('click', () => {
+        calculateAndRender();
+        showToast('Recalculated');
+      });
+    }
+
+    if (btnCopyLinkMobile) {
+      btnCopyLinkMobile.addEventListener('click', () => {
+        copyShareLink();
+      });
+    }
+
+    if (btnResetMobile) {
+      btnResetMobile.addEventListener('click', () => {
+        resetApp();
+      });
+    }
+
+    dom.tipPct.addEventListener('input', () => calculateAndRender());
+    dom.taxPct.addEventListener('input', () => calculateAndRender());
+    dom.rounding.addEventListener('change', () => calculateAndRender());
+
+    window.addEventListener('hashchange', () => {
+      const loaded = initFromHashIfPresent();
+      if (loaded) {
+        renderPeople();
+        renderItems();
+        calculateAndRender();
+        showToast('Loaded from link');
+      }
+    });
+
+    init();
+  </script>
+</body>
+</html>

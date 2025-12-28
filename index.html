@@ -906,25 +906,23 @@
                 STATE.entity = t;
                 document.getElementById('typeIP').className = `entity-toggle ${t === 'ip' ? 'active' : ''}`;
                 document.getElementById('typeOOO').className = `entity-toggle ${t === 'ooo' ? 'active' : ''}`;
-                document.getElementById('typeOOO').className = `entity-toggle ${t === 'ooo' ? 'active' : ''}`;
 
                 const pat = document.getElementById('optPatent');
                 const eshn = document.getElementById('optEshn');
                 const usn6 = document.getElementById('optUsn6');
                 const usn15 = document.getElementById('optUsn15');
 
+                // Unlock generic regimes
+                eshn.classList.remove('disabled');
+                usn6.classList.remove('disabled');
+                usn15.classList.remove('disabled');
+
                 if (t === 'ip') {
                     pat.classList.remove('disabled');
-                    eshn.classList.remove('disabled');
-                    usn6.classList.remove('disabled');
-                    usn15.classList.remove('disabled');
                     document.getElementById('ipNewBox').style.display = 'flex';
                     document.getElementById('partnershipBox').style.display = 'flex';
                 } else if (t === 'ooo') {
                     pat.classList.add('disabled');
-                    eshn.classList.remove('disabled');
-                    usn6.classList.remove('disabled');
-                    usn15.classList.remove('disabled');
                     document.getElementById('ipNewBox').style.display = 'none';
                     document.getElementById('partnershipBox').style.display = 'flex';
                 }

@@ -641,6 +641,17 @@
                         </div>
                     </div>
 
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:15px;" class="row-2-col">
+                        <div class="input-group">
+                            <label>Недвижимость (Кадастр)</label>
+                            <div class="input-wrapper"><input type="text" id="propertyValue" value="0"></div>
+                        </div>
+                        <div class="input-group">
+                            <label>Земля (Кадастр)</label>
+                            <div class="input-wrapper"><input type="text" id="landValue" value="0"></div>
+                        </div>
+                    </div>
+
                     <div class="input-group" id="smeBox">
                         <label style="display:flex; align-items:center; cursor:pointer;">
                             <input type="checkbox" id="isSme" checked style="width:auto; margin-right:8px;">
@@ -686,6 +697,8 @@
                             id="insIpDisplay" class="breakdown-value">0</span></div>
                     <div class="breakdown-row" id="rowVat" style="display:none"><span>НДС</span><span id="vatDisplay"
                             class="breakdown-value">0</span></div>
+                    <div class="breakdown-row" id="rowAssets" style="display:none"><span>Имущество/Земля</span><span
+                            id="assetsDisplay" class="breakdown-value">0</span></div>
                     <div class="breakdown-row" id="rowDiv"
                         style="display:none; color:var(--text-light); border-top:1px dashed #e5e7eb; margin-top:5px; padding-top:10px;">
                         <span>+ Див/Вывод (<span id="divRateDisplay">13</span>%)</span><span id="divTaxDisplay"
@@ -727,6 +740,7 @@
         const STATE = {
             year: 2025, entity: 'ip', regime: 'usn_income',
             income: 15000000, expenses: 8000000, employees: 3, avgSalary: 70000, tradeLevy: 0,
+            propertyValue: 0, landValue: 0,
             isSme: true, isNewIp: false, isPartnership: false,
             region: 'moscow', type: 'services', usnVatMode: 'special'
         };
@@ -860,6 +874,22 @@
                     res.eshn.total = res.eshn.main + totalIns;
                 }
 
+                // Asset Taxes
+                const landTax = s.landValue * 0.015; // 1.5% Land Tax (All regimes)
+                // Property Tax (2.2%) - OSNO pays on everything. USN pays ONLY on Cadastral (we assume input IS cadastral for simplicity to show worst case or user intent)
+                // Actually, USN is exempt from "Book Value" property but pays on "Cadastral".
+                // We'll apply it for OSNO fully. For USN, we'll assume the user entered "Taxable Property" value.
+                // To be precise: OSNO = 2.2% default. USN = 2% (often lower regional rate for cadastral). Let's use 2.2% OSNO and 2% USN for Cadastral.
+                const propTaxOsno = s.propertyValue * 0.022;
+                const propTaxUsn = s.propertyValue * 0.02; // Approx for Cadastral office/retail
+
+                // Add to each regime
+                if (res.usn_income) { res.usn_income.assets = landTax + propTaxUsn; res.usn_income.total += res.usn_income.assets; }
+                if (res.usn_income_expenses) { res.usn_income_expenses.assets = landTax + propTaxUsn; res.usn_income_expenses.total += res.usn_income_expenses.assets; }
+                if (res.osno) { res.osno.assets = landTax + propTaxOsno; res.osno.total += res.osno.assets; }
+                if (res.patent && !res.patent.error) { res.patent.assets = landTax; /* Patent IP exempt from propery tax used in business, except cadastral list */ res.patent.total += res.patent.assets; }
+                if (res.eshn && !res.eshn.error) { res.eshn.assets = landTax + propTaxUsn; res.eshn.total += res.eshn.assets; }
+
                 return res;
             }
         };
@@ -908,6 +938,8 @@
                 STATE.employees = parseInt(document.getElementById('employees').value);
                 STATE.avgSalary = parse(document.getElementById('avgSalary').value);
                 STATE.tradeLevy = parse(document.getElementById('tradeLevy').value);
+                STATE.propertyValue = parse(document.getElementById('propertyValue').value);
+                STATE.landValue = parse(document.getElementById('landValue').value);
 
                 STATE.isSme = document.getElementById('isSme').checked;
                 STATE.isNewIp = document.getElementById('isNewIp').checked;
@@ -1008,6 +1040,12 @@
                     rowVat.style.display = 'flex';
                     document.getElementById('vatDisplay').innerText = FORMATTER.format(activeRes.vat);
                 } else rowVat.style.display = 'none';
+
+                const rowAssets = document.getElementById('rowAssets');
+                if (activeRes.assets > 0) {
+                    rowAssets.style.display = 'flex';
+                    document.getElementById('assetsDisplay').innerText = FORMATTER.format(activeRes.assets);
+                } else rowAssets.style.display = 'none';
 
                 // Table
                 const tbody = document.getElementById('compBody');

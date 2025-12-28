@@ -1,1116 +1,1012 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ru">
+
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Split Bill Calculator</title>
-  <style>
-    :root {
-      --bg1: #87CEEB;
-      --bg2: #98D8C8;
-      --card: #ffffff;
-      --text: #2c3e50;
-      --muted: #7f8c8d;
-      --primary: #3498db;
-      --primary2: #2980b9;
-      --danger: #e74c3c;
-      --border: rgba(44, 62, 80, 0.15);
-      --shadow: 0 10px 30px rgba(0, 0, 0, 0.12);
-    }
-
-    * { box-sizing: border-box; }
-
-    body {
-      margin: 0;
-      padding: 24px;
-      background: linear-gradient(to bottom, var(--bg1), var(--bg2));
-      font-family: Arial, sans-serif;
-      color: var(--text);
-      min-height: 100vh;
-    }
-
-    .app {
-      max-width: 1100px;
-      margin: 0 auto;
-      background: var(--card);
-      border-radius: 14px;
-      box-shadow: var(--shadow);
-      padding: 18px;
-    }
-
-    header {
-      display: flex;
-      gap: 12px;
-      align-items: center;
-      justify-content: space-between;
-      flex-wrap: wrap;
-      border-bottom: 1px solid var(--border);
-      padding-bottom: 14px;
-      margin-bottom: 14px;
-    }
-
-    header h1 {
-      font-size: 20px;
-      margin: 0;
-      letter-spacing: 0.2px;
-    }
-
-    header .sub {
-      margin: 4px 0 0;
-      color: var(--muted);
-      font-size: 13px;
-    }
-
-    .top-actions {
-      display: flex;
-      gap: 10px;
-      align-items: center;
-      flex-wrap: wrap;
-    }
-
-    button {
-      appearance: none;
-      border: none;
-      background: var(--primary);
-      color: #fff;
-      padding: 10px 12px;
-      border-radius: 10px;
-      cursor: pointer;
-      font-weight: 600;
-      font-size: 14px;
-    }
-
-    button:hover { background: var(--primary2); }
-
-    button.secondary {
-      background: transparent;
-      border: 1px solid var(--border);
-      color: var(--text);
-    }
-
-    button.secondary:hover { background: rgba(52, 152, 219, 0.10); }
-
-    button.danger {
-      background: var(--danger);
-    }
-
-    button.danger:hover {
-      filter: brightness(0.95);
-    }
-
-    .grid {
-      display: grid;
-      grid-template-columns: 1.1fr 1.4fr;
-      gap: 14px;
-    }
-
-    @media (max-width: 980px) {
-      body { padding: 14px; }
-      .grid { grid-template-columns: 1fr; }
-    }
-
-    .card {
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 14px;
-    }
-
-    .card h2 {
-      margin: 0 0 10px;
-      font-size: 16px;
-    }
-
-    .row {
-      display: grid;
-      grid-template-columns: 1fr 140px 44px;
-      gap: 8px;
-      margin-bottom: 8px;
-      align-items: center;
-    }
-
-    .row.items {
-      grid-template-columns: 1.2fr 120px 180px 1.2fr 44px;
-    }
-
-    @media (max-width: 980px) {
-      .row { grid-template-columns: 1fr 120px 44px; }
-      .row.items { grid-template-columns: 1fr 120px 1fr; grid-auto-rows: auto; }
-      .row.items .col-span { grid-column: 1 / -1; }
-    }
-
-    input[type="text"],
-    input[type="number"],
-    select {
-      width: 100%;
-      padding: 10px 10px;
-      border-radius: 10px;
-      border: 1px solid var(--border);
-      outline: none;
-      font-size: 14px;
-      background: #fff;
-      color: var(--text);
-    }
-
-    input[type="number"] { text-align: right; }
-
-    .hint {
-      font-size: 12px;
-      color: var(--muted);
-      margin-top: 6px;
-      line-height: 1.35;
-    }
-
-    .pill {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      border: 1px solid var(--border);
-      border-radius: 999px;
-      padding: 8px 10px;
-      background: rgba(255, 255, 255, 0.7);
-      font-size: 13px;
-      color: var(--muted);
-    }
-
-    .totals {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 10px;
-      margin-top: 12px;
-    }
-
-    .kpi {
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 10px;
-    }
-
-    .kpi .label { font-size: 12px; color: var(--muted); }
-    .kpi .value { font-size: 18px; font-weight: 800; margin-top: 4px; }
-
-    .results {
-      display: grid;
-      grid-template-columns: 1fr;
-      gap: 12px;
-    }
-
-    .table {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: 14px;
-    }
-
-    .table th,
-    .table td {
-      padding: 10px 8px;
-      border-bottom: 1px solid var(--border);
-      text-align: left;
-      vertical-align: top;
-    }
-
-    .table th {
-      font-size: 12px;
-      color: var(--muted);
-      text-transform: uppercase;
-      letter-spacing: 0.6px;
-    }
-
-    .right { text-align: right; }
-
-    .ok { color: #1f7a1f; font-weight: 700; }
-    .warn { color: #b45309; font-weight: 700; }
-    .bad { color: #b91c1c; font-weight: 700; }
-
-    .settlement {
-      padding: 12px;
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      background: rgba(52, 152, 219, 0.06);
-    }
-
-    .settlement h3 {
-      margin: 0 0 8px;
-      font-size: 14px;
-    }
-
-    .settlement ol {
-      margin: 0;
-      padding-left: 18px;
-    }
-
-    .toast {
-      position: fixed;
-      left: 50%;
-      bottom: 18px;
-      transform: translateX(-50%);
-      background: rgba(44, 62, 80, 0.92);
-      color: #fff;
-      padding: 10px 12px;
-      border-radius: 10px;
-      font-size: 13px;
-      opacity: 0;
-      pointer-events: none;
-      transition: opacity 160ms ease;
-      max-width: 92vw;
-    }
-
-    .toast.show { opacity: 1; }
-
-    .inline {
-      display: flex;
-      gap: 10px;
-      flex-wrap: wrap;
-      align-items: center;
-      margin-top: 10px;
-    }
-
-    .inline label {
-      display: inline-flex;
-      gap: 8px;
-      align-items: center;
-      color: var(--muted);
-      font-size: 13px;
-    }
-
-    .inline input[type="number"] { width: 120px; }
-
-    .tiny {
-      font-size: 12px;
-      color: var(--muted);
-    }
-
-    .chipbox {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-    }
-
-    .chip {
-      display: inline-flex;
-      gap: 8px;
-      align-items: center;
-      padding: 8px 10px;
-      border: 1px solid var(--border);
-      border-radius: 999px;
-      background: #fff;
-      font-size: 13px;
-      color: var(--text);
-      user-select: none;
-    }
-
-    .chip input { margin: 0; }
-
-    .mobile-actions {
-      display: none;
-      position: sticky;
-      bottom: 0;
-      z-index: 50;
-      margin: 14px -18px -18px;
-      padding: 12px 14px;
-      padding-bottom: calc(12px + env(safe-area-inset-bottom));
-      background: rgba(255, 255, 255, 0.92);
-      backdrop-filter: blur(10px);
-      border-top: 1px solid var(--border);
-    }
-
-    .mobile-actions .bar {
-      display: grid;
-      grid-template-columns: 1fr 1fr 1fr;
-      gap: 10px;
-      max-width: 1100px;
-      margin: 0 auto;
-    }
-
-    .mobile-actions button {
-      padding: 14px 12px;
-      font-size: 15px;
-      border-radius: 12px;
-    }
-
-    @media (max-width: 520px) {
-      body {
-        padding: 10px;
-      }
-
-      .app {
-        padding: 14px;
-        border-radius: 12px;
-      }
-
-      header {
-        gap: 8px;
-      }
-
-      header h1 {
-        font-size: 18px;
-      }
-
-      header .sub {
-        font-size: 12px;
-      }
-
-      .top-actions {
-        display: none;
-      }
-
-      .grid {
-        grid-template-columns: 1fr;
-      }
-
-      .row {
-        grid-template-columns: 1fr 120px 44px;
-        gap: 10px;
-      }
-
-      .row.items {
-        grid-template-columns: 1fr 1fr;
-        grid-auto-rows: auto;
-      }
-
-      .row.items > :nth-child(3) {
-        grid-column: 1 / -1;
-      }
-
-      .row.items .col-span {
-        grid-column: 1 / -1;
-      }
-
-      input[type="text"],
-      input[type="number"],
-      select {
-        padding: 12px 12px;
-        font-size: 16px;
-      }
-
-      button {
-        padding: 12px 12px;
-        font-size: 15px;
-      }
-
-      .chip {
-        padding: 10px 12px;
-        font-size: 14px;
-      }
-
-      .totals {
-        grid-template-columns: 1fr;
-      }
-
-      .mobile-actions {
-        display: block;
-      }
-
-      .toast {
-        bottom: calc(90px + env(safe-area-inset-bottom));
-      }
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Калькулятор Налогов РФ 2025/2026</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #4f46e5;
+            --primary-dark: #4338ca;
+            --secondary: #ec4899;
+            --accent: #8b5cf6;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --text-main: #1f2937;
+            --text-light: #6b7280;
+            --bg-gradient-start: #4158d0;
+            --bg-gradient-mid: #c850c0;
+            --bg-gradient-end: #ffcc70;
+            --glass-bg: rgba(255, 255, 255, 0.82);
+            --glass-border: rgba(255, 255, 255, 0.6);
+            --card-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, var(--bg-gradient-start) 0%, var(--bg-gradient-mid) 46%, var(--bg-gradient-end) 100%);
+            min-height: 100vh;
+            color: var(--text-main);
+            padding: 20px;
+            line-height: 1.5;
+            background-attachment: fixed;
+        }
+
+        .container {
+            max-width: 1280px;
+            margin: 30px auto;
+            background: var(--glass-bg);
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
+            border-radius: 24px;
+            border: 1px solid var(--glass-border);
+            box-shadow: var(--card-shadow);
+            overflow: hidden;
+            animation: fadeIn 0.6s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(15px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        header {
+            background: rgba(255, 255, 255, 0.4);
+            padding: 25px;
+            text-align: center;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        header h1 {
+            font-size: 2rem;
+            margin-bottom: 5px;
+            background: linear-gradient(to right, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-weight: 800;
+        }
+
+        header p {
+            color: var(--text-light);
+            font-size: 0.95rem;
+        }
+
+        .app-container {
+            display: grid;
+            grid-template-columns: 1fr 1.1fr;
+            gap: 30px;
+            padding: 30px;
+        }
+
+        @media (max-width: 900px) {
+            .app-container {
+                grid-template-columns: 1fr;
+                padding: 20px;
+            }
+
+            .container {
+                margin: 15px auto;
+            }
+        }
+
+        .input-section {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .section-title {
+            color: var(--text-main);
+            margin-bottom: 20px;
+            font-size: 1.3rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        /* Interactive Elements */
+        .card {
+            background: rgba(255, 255, 255, 0.5);
+            padding: 24px;
+            border-radius: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            transition: all 0.3s;
+        }
+
+        /* Year Toggle */
+        .year-toggle-container {
+            display: flex;
+            background: rgba(0, 0, 0, 0.05);
+            border-radius: 12px;
+            padding: 4px;
+            margin-bottom: 20px;
+        }
+
+        .year-btn {
+            flex: 1;
+            text-align: center;
+            padding: 8px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 600;
+            color: var(--text-light);
+            transition: all 0.2s;
+        }
+
+        .year-btn.active {
+            background: white;
+            color: var(--primary);
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+        }
+
+        /* Type Toggles */
+        .entity-type-switcher {
+            display: flex;
+            background: rgba(255, 255, 255, 0.5);
+            padding: 4px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            border: 1px solid rgba(0, 0, 0, 0.05);
+        }
+
+        .entity-toggle {
+            flex: 1;
+            text-align: center;
+            padding: 10px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.2s;
+            color: var(--text-light);
+            font-size: 0.9rem;
+        }
+
+        .entity-toggle.active {
+            background: white;
+            color: var(--primary);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        }
+
+        /* Regime Grid */
+        .tax-regime-selector {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .regime-option {
+            background: white;
+            padding: 10px;
+            border-radius: 12px;
+            border: 2px solid transparent;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: center;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            min-height: 60px;
+        }
+
+        .regime-option:hover {
+            border-color: rgba(79, 70, 229, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .regime-option.active {
+            border-color: var(--primary);
+            background: #eef2ff;
+        }
+
+        .regime-option.disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            background: #f3f4f6;
+            pointer-events: none;
+        }
+
+        .regime-option.error {
+            border-color: var(--danger);
+            background: #fef2f2;
+        }
+
+        .regime-option h3 {
+            font-size: 0.9rem;
+            font-weight: 700;
+            color: var(--text-main);
+        }
+
+        .regime-option p {
+            font-size: 0.75rem;
+            color: var(--text-light);
+            line-height: 1.2;
+            margin-top: 2px;
+        }
+
+        /* Inputs */
+        .input-group {
+            margin-bottom: 15px;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: 500;
+            font-size: 0.85rem;
+            color: var(--text-main);
+        }
+
+        .input-wrapper {
+            position: relative;
+        }
+
+        .input-wrapper input,
+        .input-wrapper select {
+            width: 100%;
+            padding: 10px 14px;
+            padding-right: 30px;
+            border: 1px solid #d1d5db;
+            border-radius: 10px;
+            font-size: 0.95rem;
+            background: rgba(255, 255, 255, 0.95);
+            transition: all 0.2s;
+        }
+
+        .input-wrapper::after {
+            content: '₽';
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-light);
+            pointer-events: none;
+        }
+
+        .input-wrapper.no-currency::after {
+            content: none;
+        }
+
+        .input-wrapper input:focus,
+        .input-wrapper select:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+        }
+
+        /* Warning Box */
+        .warning-box {
+            background: rgba(245, 158, 11, 0.1);
+            border: 1px dashed var(--warning);
+            padding: 12px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            display: none;
+        }
+
+        .warning-title {
+            font-weight: 700;
+            font-size: 0.85rem;
+            color: #b45309;
+            margin-bottom: 4px;
+        }
+
+        .warning-text {
+            font-size: 0.8rem;
+            color: #d97706;
+        }
+
+        /* Results */
+        .results-section {
+            background: rgba(255, 255, 255, 0.5);
+            border-radius: 20px;
+            padding: 25px;
+            border: 1px solid rgba(255, 255, 255, 0.5);
+        }
+
+        .total-card {
+            background: linear-gradient(135deg, #059669 0%, #047857 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 16px;
+            text-align: center;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 25px rgba(5, 150, 105, 0.2);
+        }
+
+        .total-label {
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            opacity: 0.9;
+            margin-bottom: 5px;
+        }
+
+        .total-amount {
+            font-size: 2rem;
+            font-weight: 800;
+            line-height: 1.1;
+        }
+
+        .breakdown-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid #f3f4f6;
+            font-size: 0.9rem;
+        }
+
+        .breakdown-row:last-child {
+            border-bottom: none;
+        }
+
+        .breakdown-value {
+            font-weight: 600;
+        }
+
+        /* Table */
+        .comparison-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+            font-size: 0.85rem;
+        }
+
+        .comparison-table th {
+            text-align: left;
+            padding: 10px;
+            color: var(--text-light);
+            text-transform: uppercase;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .comparison-table td {
+            padding: 10px;
+            border-bottom: 1px solid #f3f4f6;
+        }
+
+        .row-best {
+            background: #ecfdf5;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 0.7rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            vertical-align: middle;
+        }
+
+        .badge-success {
+            background: #d1fae5;
+            color: #059669;
+        }
+
+        .badge-purple {
+            background: #f3e8ff;
+            color: #7e22ce;
+        }
+
+        .badge-danger {
+            background: #fee2e2;
+            color: #dc2626;
+        }
+
+        .btn-calc {
+            width: 100%;
+            padding: 14px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 10px;
+            transition: 0.2s;
+        }
+
+        .btn-calc:hover {
+            background: var(--primary-dark);
+            transform: translateY(-1px);
+        }
+
+        .insight-info {
+            padding: 15px;
+            background: white;
+            border-radius: 12px;
+            margin-top: 20px;
+            border-left: 4px solid var(--primary);
+            display: none;
+        }
+
+        .insight-header {
+            font-size: 0.9rem;
+            font-weight: 700;
+            color: var(--text-main);
+            margin-bottom: 5px;
+        }
+
+        .insight-text {
+            font-size: 0.85rem;
+            color: var(--text-light);
+            line-height: 1.5;
+        }
+
+        .startup-cost-badge {
+            display: inline-block;
+            font-size: 0.75rem;
+            color: #4b5563;
+            background: #f3f4f6;
+            padding: 4px 8px;
+            border-radius: 6px;
+            margin-bottom: 15px;
+        }
+    </style>
 </head>
+
 <body>
-  <div class="app">
-    <header>
-      <div>
-        <h1>Split Bill Calculator</h1>
-        <div class="sub">Offline, private, and shareable via a single link (no account, no server).</div>
-      </div>
-      <div class="top-actions">
-        <span class="pill" id="shareStatus">No shared link loaded</span>
-        <button class="secondary" id="btnCopyLink" type="button">Copy share link</button>
-        <button class="secondary" id="btnReset" type="button">Reset</button>
-      </div>
-    </header>
+    <div class="container">
+        <header>
+            <h1>Налоговый Навигатор</h1>
+            <p>Сравнение условий 2025 (текущие) и 2026 (реформа)</p>
+        </header>
 
-    <div class="grid">
-      <section class="card">
-        <h2>People</h2>
-        <div id="people"></div>
-        <div class="inline">
-          <button id="btnAddPerson" type="button">Add person</button>
-        </div>
-        <div class="hint">Enter what each person already paid (optional). Items can also specify who paid.</div>
+        <div class="app-container">
+            <div class="input-section">
+                <!-- Year Selector -->
+                <div class="year-toggle-container">
+                    <div class="year-btn active" id="year2025" onclick="UI.setYear(2025)">2025 (Сейчас)</div>
+                    <div class="year-btn" id="year2026" onclick="UI.setYear(2026)">2026 (Реформа)</div>
+                </div>
 
-        <div class="inline" style="margin-top: 12px;">
-          <label>Tip % <input id="tipPct" type="number" min="0" step="0.1" value="0" /></label>
-          <label>Tax % <input id="taxPct" type="number" min="0" step="0.1" value="0" /></label>
-          <label>Rounding <select id="rounding">
-            <option value="none">No rounding</option>
-            <option value="0.01">Nearest 0.01</option>
-            <option value="0.05">Nearest 0.05</option>
-            <option value="0.10">Nearest 0.10</option>
-            <option value="0.50">Nearest 0.50</option>
-            <option value="1">Nearest 1</option>
-          </select></label>
-        </div>
-        <div class="hint">Rounding applies to each person’s final net, then the app rebalances by adjusting the largest creditor/debtor so totals still match.</div>
-      </section>
+                <!-- Entity Type -->
+                <div class="entity-type-switcher">
+                    <div class="entity-toggle active" id="typeIP" onclick="UI.setEntityType('ip')">ИП</div>
+                    <div class="entity-toggle" id="typeOOO" onclick="UI.setEntityType('ooo')">Организация</div>
 
-      <section class="card">
-        <h2>Bill items</h2>
-        <div id="items"></div>
-        <div class="inline">
-          <button id="btnAddItem" type="button">Add item</button>
-          <button id="btnCalculate" type="button">Recalculate</button>
-        </div>
-        <div class="hint">For each item: amount, who paid, and who shared it.</div>
+                </div>
 
-        <div class="totals">
-          <div class="kpi"><div class="label">Subtotal</div><div class="value" id="kpiSubtotal">0.00</div></div>
-          <div class="kpi"><div class="label">Tip + Tax</div><div class="value" id="kpiExtras">0.00</div></div>
-          <div class="kpi"><div class="label">Total</div><div class="value" id="kpiTotal">0.00</div></div>
+                <div class="card">
+                    <div id="startupCostDisplay" class="startup-cost-badge">Регистрация: 800 ₽</div>
+
+                    <label class="section-title" style="font-size:1rem; margin-bottom:10px;">Режим
+                        налогообложения</label>
+                    <div class="tax-regime-selector" id="regimeSelector">
+                        <div class="regime-option active" data-regime="usn_income" id="optUsn6">
+                            <h3>УСН 6%</h3>
+                            <p>"Доходы"</p>
+                        </div>
+                        <div class="regime-option" data-regime="usn_income_expenses" id="optUsn15">
+                            <h3>УСН 15%</h3>
+                            <p>"Д - Р"</p>
+                        </div>
+                        <div class="regime-option" data-regime="osno">
+                            <h3>ОСНО</h3>
+                        </div>
+                        <div class="regime-option" data-regime="patent" id="optPatent">
+                            <h3>Патент</h3>
+                        </div>
+                        <div class="regime-option" data-regime="eshn" id="optEshn">
+                            <h3>ЕСХН</h3>
+                        </div>
+                    </div>
+
+                    <div class="input-group">
+                        <label>Годовой доход</label>
+                        <div class="input-wrapper"><input type="text" id="annualIncome" value="15 000 000"></div>
+                    </div>
+
+                    <!-- USN VAT Warning -->
+                    <div class="warning-box" id="usnVatBox">
+                        <div class="warning-title">⚠️ НДС на УСН (<span id="usnVatThresholdDisplay">60</span> млн+)
+                        </div>
+                        <div class="warning-text">Ваш доход превысил лимит. Вы платите НДС.</div>
+                        <div style="margin-top:8px; display:flex; gap:10px; font-size:0.85rem;">
+                            <label><input type="radio" name="usnVatType" value="special" checked> Спец. ставка (<span
+                                    id="vatSpecialRate">5%</span>)</label>
+                            <label><input type="radio" name="usnVatType" value="standard"> 20/22% (Общая)</label>
+                        </div>
+                    </div>
+
+                    <div class="input-group">
+                        <label>Годовые расходы</label>
+                        <div class="input-wrapper"><input type="text" id="annualExpenses" value="8 000 000"></div>
+                    </div>
+
+                    <div class="input-group">
+                        <label>Регион</label>
+                        <div class="input-wrapper no-currency">
+                            <select id="region">
+                                <option value="moscow">Москва</option>
+                                <option value="spb">С. Петербург</option>
+                                <option value="other">Другой регион (РФ)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="input-group">
+                        <label>Вид бизнеса</label>
+                        <div class="input-wrapper no-currency">
+                            <select id="businessType">
+                                <option value="services">Услуги</option>
+                                <option value="retail">Торговля (Магазин/Сеть)</option>
+                                <option value="production">Производство</option>
+                                <option value="it">IT-компания</option>
+                                <option value="science">Наука/Соц.сфера</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="input-group" id="tradeLevyArg" style="display:none;">
+                        <label>Торговый сбор (год)</label>
+                        <div class="input-wrapper"><input type="text" id="tradeLevy" value="0"></div>
+                    </div>
+
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:15px;">
+                        <div class="input-group">
+                            <label>Сотрудники</label>
+                            <div class="input-wrapper no-currency"><input type="number" id="employees" value="3"></div>
+                        </div>
+                        <div class="input-group">
+                            <label>Зарплата (мес.)</label>
+                            <div class="input-wrapper"><input type="text" id="avgSalary" value="70 000"></div>
+                        </div>
+                    </div>
+
+                    <div class="input-group" id="smeBox">
+                        <label style="display:flex; align-items:center; cursor:pointer;">
+                            <input type="checkbox" id="isSme" checked style="width:auto; margin-right:8px;">
+                            Субъект МСП
+                        </label>
+                        <div id="smeBenefitNote" style="font-size:0.75rem; color:var(--success); margin-left:24px;">
+                        </div>
+                    </div>
+
+                    <div class="input-group" id="ipNewBox">
+                        <label style="display:flex; align-items:center; cursor:pointer;">
+                            <input type="checkbox" id="isNewIp" style="width:auto; margin-right:8px;">
+                            Каникулы (Новый ИП)
+                        </label>
+                    </div>
+
+                    <div class="input-group" id="partnershipBox">
+                        <label style="display:flex; align-items:center; cursor:pointer;">
+                            <input type="checkbox" id="isPartnership" style="width:auto; margin-right:8px;">
+                            Участник простого товарищества / ДУ
+                        </label>
+                    </div>
+
+                    <button class="btn-calc" onclick="UI.update()">Рассчитать</button>
+                </div>
+            </div>
+
+            <div class="results-section">
+                <h2 class="section-title">Итоги <span id="resYearDisplay"
+                        style="color:var(--primary); margin-left:auto;">2025</span></h2>
+
+                <div class="total-card">
+                    <div class="total-label">Общая сумма налогов</div>
+                    <div class="total-amount" id="totalDisplay">0 ₽</div>
+                </div>
+
+                <div style="background:white; border-radius:12px; padding:15px; margin-bottom:20px;">
+                    <div class="breakdown-row"><span>Налог (Режим)</span><span id="mainTaxDisplay"
+                            class="breakdown-value">0</span></div>
+                    <div class="breakdown-row"><span>Взносы (Сотрудники)</span><span id="insEmpDisplay"
+                            class="breakdown-value">0</span></div>
+                    <div class="breakdown-row" id="rowInsIp" style="display:none"><span>Взносы (ИП)</span><span
+                            id="insIpDisplay" class="breakdown-value">0</span></div>
+                    <div class="breakdown-row" id="rowVat" style="display:none"><span>НДС</span><span id="vatDisplay"
+                            class="breakdown-value">0</span></div>
+                    <div class="breakdown-row" id="rowDiv"
+                        style="display:none; color:var(--text-light); border-top:1px dashed #e5e7eb; margin-top:5px; padding-top:10px;">
+                        <span>+ Див/Вывод (<span id="divRateDisplay">13</span>%)</span><span id="divTaxDisplay"
+                            class="breakdown-value">0</span>
+                    </div>
+                </div>
+
+                <h3 style="font-size:0.9rem; font-weight:700; margin-bottom:10px; color:var(--text-light);">СРАВНЕНИЕ
+                    РЕЖИМОВ</h3>
+                <div style="overflow-x:auto;">
+                    <table class="comparison-table">
+                        <thead>
+                            <tr>
+                                <th>Режим</th>
+                                <th>Сумма</th>
+                                <th>Ставка</th>
+                                <th>Инфо</th>
+                            </tr>
+                        </thead>
+                        <tbody id="compBody"></tbody>
+                    </table>
+                </div>
+
+                <div class="insight-info" id="insightBox"></div>
+            </div>
         </div>
-      </section>
     </div>
 
-    <section class="card" style="margin-top: 14px;">
-      <h2>Results</h2>
-      <div class="results">
-        <div>
-          <table class="table" id="resultTable">
-            <thead>
-              <tr>
-                <th>Person</th>
-                <th class="right">Paid</th>
-                <th class="right">Share</th>
-                <th class="right">Net</th>
-              </tr>
-            </thead>
-            <tbody></tbody>
-          </table>
-          <div class="tiny" id="balanceNote"></div>
-        </div>
+    <script>
+        const FORMATTER = new Intl.NumberFormat('ru-RU', { style: 'currency', currency: 'RUB', maximumFractionDigits: 0 });
+        const parse = val => parseFloat(val?.replace(/[^0-9.]/g, '')) || 0;
 
-        <div class="settlement" id="settlementBox">
-          <h3>Suggested settlement (minimal transfers)</h3>
-          <ol id="settlementList"></ol>
-          <div class="tiny" id="settlementMeta"></div>
-        </div>
-      </div>
-    </section>
+        const CONFIG = {
+            2025: { vat_rate: 0.20, usn_vat_threshold: 60000000, it_ins_rate: 0.076, insurance_cap: 2760000 },
+            2026: { vat_rate: 0.22, usn_vat_threshold: 10000000, it_ins_rate: 0.15, insurance_cap: 3000000 },
+            common: { usn6: 0.06, usn15: 0.15, eshn: 0.06, profit: 0.25, mw: 22440, ip_fixed: 53658, usn_hard_limit: 450000000 }
+        };
 
-    <div class="mobile-actions" aria-label="Quick actions">
-      <div class="bar">
-        <button id="btnCalculateMobile" type="button">Recalculate</button>
-        <button class="secondary" id="btnCopyLinkMobile" type="button">Copy link</button>
-        <button class="secondary" id="btnResetMobile" type="button">Reset</button>
-      </div>
-    </div>
-  </div>
+        const STATE = {
+            year: 2025, entity: 'ip', regime: 'usn_income',
+            income: 15000000, expenses: 8000000, employees: 3, avgSalary: 70000, tradeLevy: 0,
+            isSme: true, isNewIp: false, isPartnership: false,
+            region: 'moscow', type: 'services', usnVatMode: 'special'
+        };
 
-  <div class="toast" id="toast"></div>
+        const LOGIC = {
+            calcInsurance(s, cfg) {
+                if (s.employees <= 0) return 0;
+                const totalSal = s.avgSalary * 12;
+                if (s.type === 'it') return totalSal * cfg.it_ins_rate * s.employees;
+                const isPriority = (s.type === 'production' || s.type === 'science');
+                if (isPriority) return totalSal * 0.076 * s.employees;
 
-  <script>
-    const dom = {
-      people: document.getElementById('people'),
-      items: document.getElementById('items'),
-      btnAddPerson: document.getElementById('btnAddPerson'),
-      btnAddItem: document.getElementById('btnAddItem'),
-      btnCalculate: document.getElementById('btnCalculate'),
-      btnCopyLink: document.getElementById('btnCopyLink'),
-      btnReset: document.getElementById('btnReset'),
-      tipPct: document.getElementById('tipPct'),
-      taxPct: document.getElementById('taxPct'),
-      rounding: document.getElementById('rounding'),
-      kpiSubtotal: document.getElementById('kpiSubtotal'),
-      kpiExtras: document.getElementById('kpiExtras'),
-      kpiTotal: document.getElementById('kpiTotal'),
-      resultTableBody: document.querySelector('#resultTable tbody'),
-      settlementList: document.getElementById('settlementList'),
-      settlementMeta: document.getElementById('settlementMeta'),
-      settlementBox: document.getElementById('settlementBox'),
-      toast: document.getElementById('toast'),
-      shareStatus: document.getElementById('shareStatus'),
-      balanceNote: document.getElementById('balanceNote'),
-    };
+                let applySme = s.isSme;
 
-    function uid() {
-      return Math.random().toString(16).slice(2) + Date.now().toString(16);
-    }
+                if (s.year === 2026 && !isPriority) applySme = false;
 
-    function roundTo(n, step) {
-      if (!step || step <= 0) return n;
-      return Math.round(n / step) * step;
-    }
+                if (applySme) {
+                    const base = Math.min(s.avgSalary, CONFIG.common.mw);
+                    const excess = Math.max(0, s.avgSalary - CONFIG.common.mw);
+                    return ((base * 0.3) + (excess * 0.15)) * 12 * s.employees;
+                } else {
+                    if (totalSal <= cfg.insurance_cap) return totalSal * 0.3 * s.employees;
+                    return ((cfg.insurance_cap * 0.3) + ((totalSal - cfg.insurance_cap) * 0.151)) * s.employees;
+                }
+            },
 
-    function money(n) {
-      const v = Number.isFinite(n) ? n : 0;
-      return v.toFixed(2);
-    }
+            calc(s) {
+                const cfg = CONFIG[s.year];
+                const res = {};
 
-    function showToast(msg) {
-      dom.toast.textContent = msg;
-      dom.toast.classList.add('show');
-      window.setTimeout(() => dom.toast.classList.remove('show'), 1600);
-    }
+                const insEmp = this.calcInsurance(s, cfg);
+                const insIp = s.entity === 'ip' ? (CONFIG.common.ip_fixed + Math.max(0, (s.income - 300000) * 0.01)) : 0;
+                const totalIns = insEmp + insIp;
+                const usnStrictLimit = (s.income > CONFIG.common.usn_hard_limit);
+                let usnVat = 0;
 
-    const state = {
-      people: [],
-      items: [],
-      tipPct: 0,
-      taxPct: 0,
-      rounding: 'none',
-    };
+                if (!usnStrictLimit && s.income > cfg.usn_vat_threshold) {
+                    if (s.usnVatMode === 'special') {
+                        const rate = s.income > 250000000 ? 0.07 : 0.05;
+                        usnVat = s.income * rate;
+                    } else {
+                        const netInc = s.income / (1 + cfg.vat_rate);
+                        const netExp = s.expenses / (1 + cfg.vat_rate);
+                        usnVat = Math.max(0, (s.income - netInc) - (s.expenses - netExp));
+                    }
+                }
 
-    function normalizePeople() {
-      const names = new Set();
-      state.people = state.people.filter(p => p && typeof p.name === 'string');
-      state.people.forEach(p => {
-        p.name = p.name.trim() || 'Person';
-        let base = p.name;
-        let i = 2;
-        while (names.has(p.name)) {
-          p.name = `${base} ${i++}`;
-        }
-        names.add(p.name);
-        p.paid = Number(p.paid) || 0;
-      });
-    }
+                const isHoliday = (s.entity === 'ip' && s.isNewIp && (s.type === 'production' || s.type === 'science'));
 
-    function safePeopleIndexById() {
-      const map = new Map();
-      state.people.forEach((p, i) => map.set(p.id, i));
-      return map;
-    }
+                // 1. USN 6
+                if (usnStrictLimit) res.usn_income = { error: 'Слет (>450млн)' };
+                else if (s.isPartnership) res.usn_income = { error: 'Запрещено (Товарищество)' };
+                else {
+                    let rate6 = isHoliday ? 0 : 0.06;
+                    let tax6 = s.income * rate6;
+                    let maxInsDed = (s.entity === 'ip' && s.employees === 0) ? tax6 : tax6 * 0.5;
+                    let dedIns = Math.min(totalIns, maxInsDed);
+                    let taxAfterIns = tax6 - dedIns;
+                    let dedLevy = Math.min(taxAfterIns, s.tradeLevy);
+                    let finalTax = taxAfterIns - dedLevy;
+                    let badges = [];
+                    if (isHoliday) badges.push('0% Каникулы');
+                    if (dedLevy > 0) badges.push('Вычет Торг.Сбора');
 
-    function addPerson(name = '', paid = 0) {
-      state.people.push({ id: uid(), name, paid });
-    }
+                    res.usn_income = { main: finalTax, ins: totalIns, vat: usnVat, badges: badges };
+                    res.usn_income.total = finalTax + totalIns + usnVat + s.tradeLevy;
+                }
 
-    function addItem(desc = '', amount = 0, paidById = null, sharedByIds = null) {
-      const fallbackPaid = paidById || (state.people[0] ? state.people[0].id : null);
-      const fallbackShared = sharedByIds || state.people.map(p => p.id);
-      state.items.push({ id: uid(), desc, amount, paidById: fallbackPaid, sharedByIds: fallbackShared });
-    }
+                // 2. USN 15
+                if (usnStrictLimit) {
+                    res.usn_income_expenses = { error: 'Слет (>450млн)' };
+                } else {
+                    let rate15 = 0.15;
+                    let tags15 = [];
+                    if (s.region === 'moscow' && (s.type === 'production' || s.type === 'science')) { rate15 = 0.10; tags15.push('Москва 10%'); }
+                    if (isHoliday) { rate15 = 0; tags15 = ['0% Каникулы']; }
+                    let totalExp = s.expenses + s.tradeLevy;
+                    let base15 = Math.max(0, s.income - totalExp - totalIns);
+                    let tax15 = base15 * rate15;
+                    let minTax = isHoliday ? 0 : s.income * 0.01;
+                    if (!isHoliday && tax15 < minTax) { tax15 = minTax; tags15.push('Мин. налог 1%'); }
 
-    function encodeHash(obj) {
-      const json = JSON.stringify(obj);
-      const b64 = btoa(unescape(encodeURIComponent(json)));
-      return b64.replace(/=+$/g, '').replace(/\+/g, '-').replace(/\//g, '_');
-    }
+                    res.usn_income_expenses = { main: tax15, ins: totalIns, vat: usnVat, badges: tags15 };
+                    res.usn_income_expenses.total = tax15 + totalIns + usnVat + s.tradeLevy;
+                }
 
-    function decodeHash(hash) {
-      const raw = (hash || '').replace(/^#/, '').trim();
-      if (!raw) return null;
-      const b64 = raw.replace(/-/g, '+').replace(/_/g, '/');
-      const padded = b64 + '==='.slice((b64.length + 3) % 4);
-      const json = decodeURIComponent(escape(atob(padded)));
-      return JSON.parse(json);
-    }
+                // 3. OSNO
+                let osnoExp = s.expenses + s.tradeLevy;
+                const netInc = s.income / (1 + cfg.vat_rate);
+                const netExp = osnoExp / (1 + cfg.vat_rate);
+                const vatRes = Math.max(0, (s.income - netInc) - (s.expenses - netExp));
+                const profitBase = Math.max(0, netInc - netExp - totalIns);
 
-    function snapshot() {
-      normalizePeople();
-      const cleanedItems = state.items.map(it => ({
-        id: it.id,
-        desc: String(it.desc || ''),
-        amount: Number(it.amount) || 0,
-        paidById: it.paidById,
-        sharedByIds: Array.isArray(it.sharedByIds) ? it.sharedByIds.slice() : [],
-      }));
+                let taxes = { main: 0, ins: totalIns, vat: vatRes, div: 0, badges: [] };
 
-      return {
-        v: 1,
-        people: state.people.map(p => ({ id: p.id, name: p.name, paid: Number(p.paid) || 0 })),
-        items: cleanedItems,
-        tipPct: Number(state.tipPct) || 0,
-        taxPct: Number(state.taxPct) || 0,
-        rounding: state.rounding || 'none',
-      };
-    }
+                if (s.entity === 'ip') {
+                    taxes.main = profitBase * 0.15; // Simplified PIT
+                } else {
+                    // OOO
+                    let profitRate = CONFIG.common.profit; // Default 25%
+                    if (s.type === 'it') {
+                        profitRate = 0.05; // IT Benefit 5%
+                        taxes.badges.push('Льгота IT 5%');
+                    }
 
-    function applySnapshot(snap) {
-      if (!snap || typeof snap !== 'object') return false;
-      if (!Array.isArray(snap.people) || snap.people.length === 0) return false;
+                    taxes.main = profitBase * profitRate;
+                    let netProfit = profitBase - taxes.main;
+                    // Dividends
+                    if (netProfit > 0) {
+                        let divRate = 0.13;
+                        taxes.div = netProfit * divRate;
+                        taxes.divRate = divRate;
+                    }
+                }
 
-      state.people = snap.people.map(p => ({
-        id: String(p.id || uid()),
-        name: String(p.name || ''),
-        paid: Number(p.paid) || 0,
-      }));
+                res.osno = taxes;
+                res.osno.total = taxes.main + totalIns + vatRes + (taxes.div || 0) + s.tradeLevy;
 
-      state.items = Array.isArray(snap.items) ? snap.items.map(it => ({
-        id: String(it.id || uid()),
-        desc: String(it.desc || ''),
-        amount: Number(it.amount) || 0,
-        paidById: it.paidById || (state.people[0] ? state.people[0].id : null),
-        sharedByIds: Array.isArray(it.sharedByIds) ? it.sharedByIds.slice() : state.people.map(p => p.id),
-      })) : [];
+                // 4. Patent
+                if (s.entity === 'ip' && s.income < 60000000) {
+                    let cost = 1000000 * 0.06;
+                    if (isHoliday) cost = 0;
+                    let ded = isHoliday ? 0 : Math.min(totalIns, s.employees === 0 ? cost : cost * 0.5);
+                    res.patent = { main: cost - ded, ins: totalIns, vat: 0, badges: isHoliday ? ['0% Каникулы'] : [] };
+                    res.patent.total = (cost - ded) + totalIns + s.tradeLevy;
+                } else { res.patent = { error: 'Недоступен (<60млн)' }; }
 
-      state.tipPct = Number(snap.tipPct) || 0;
-      state.taxPct = Number(snap.taxPct) || 0;
-      state.rounding = snap.rounding || 'none';
+                // 5. ESHN
+                {
+                    res.eshn = { main: Math.max(0, s.income - s.expenses - totalIns) * 0.06, ins: totalIns, vat: 0, badges: [] };
+                    res.eshn.total = res.eshn.main + totalIns;
+                }
 
-      normalizePeople();
-      dom.tipPct.value = String(state.tipPct);
-      dom.taxPct.value = String(state.taxPct);
-      dom.rounding.value = String(state.rounding);
-      return true;
-    }
-
-    function setHashFromState() {
-      const snap = snapshot();
-      const h = encodeHash(snap);
-      const next = `#${h}`;
-      if (window.location.hash !== next) {
-        history.replaceState(null, '', next);
-      }
-    }
-
-    function copyShareLink() {
-      setHashFromState();
-      const url = window.location.href;
-      navigator.clipboard.writeText(url).then(
-        () => showToast('Share link copied'),
-        () => showToast('Could not copy link (browser permission)')
-      );
-    }
-
-    function renderPeople() {
-      dom.people.innerHTML = '';
-      state.people.forEach((p) => {
-        const row = document.createElement('div');
-        row.className = 'row';
-
-        const name = document.createElement('input');
-        name.type = 'text';
-        name.value = p.name;
-        name.placeholder = 'Name';
-        name.addEventListener('input', () => {
-          p.name = name.value;
-          renderItems();
-          calculateAndRender();
-        });
-
-        const paid = document.createElement('input');
-        paid.type = 'number';
-        paid.step = '0.01';
-        paid.min = '0';
-        paid.value = String(p.paid || 0);
-        paid.addEventListener('input', () => {
-          p.paid = Number(paid.value) || 0;
-          calculateAndRender();
-        });
-
-        const del = document.createElement('button');
-        del.className = 'danger';
-        del.type = 'button';
-        del.textContent = '×';
-        del.title = 'Remove person';
-        del.addEventListener('click', () => {
-          const idx = state.people.findIndex(x => x.id === p.id);
-          if (idx >= 0) state.people.splice(idx, 1);
-          if (state.people.length === 0) {
-            addPerson('Person 1', 0);
-          }
-          state.items.forEach(it => {
-            if (!state.people.some(pp => pp.id === it.paidById)) {
-              it.paidById = state.people[0].id;
+                return res;
             }
-            it.sharedByIds = (it.sharedByIds || []).filter(id => state.people.some(pp => pp.id === id));
-            if (!it.sharedByIds || it.sharedByIds.length === 0) {
-              it.sharedByIds = state.people.map(pp => pp.id);
+        };
+
+        const UI = {
+            setYear(y) {
+                STATE.year = y;
+                document.getElementById('year2025').className = `year-btn ${y === 2025 ? 'active' : ''}`;
+                document.getElementById('year2026').className = `year-btn ${y === 2026 ? 'active' : ''}`;
+                document.getElementById('resYearDisplay').innerText = y;
+                this.update();
+            },
+            setEntityType(t) {
+                STATE.entity = t;
+                document.getElementById('typeIP').className = `entity-toggle ${t === 'ip' ? 'active' : ''}`;
+                document.getElementById('typeOOO').className = `entity-toggle ${t === 'ooo' ? 'active' : ''}`;
+                document.getElementById('typeOOO').className = `entity-toggle ${t === 'ooo' ? 'active' : ''}`;
+
+                const pat = document.getElementById('optPatent');
+                const eshn = document.getElementById('optEshn');
+                const usn6 = document.getElementById('optUsn6');
+                const usn15 = document.getElementById('optUsn15');
+
+                if (t === 'ip') {
+                    pat.classList.remove('disabled');
+                    eshn.classList.remove('disabled');
+                    usn6.classList.remove('disabled');
+                    usn15.classList.remove('disabled');
+                    document.getElementById('ipNewBox').style.display = 'flex';
+                    document.getElementById('partnershipBox').style.display = 'flex';
+                } else if (t === 'ooo') {
+                    pat.classList.add('disabled');
+                    eshn.classList.remove('disabled');
+                    usn6.classList.remove('disabled');
+                    usn15.classList.remove('disabled');
+                    document.getElementById('ipNewBox').style.display = 'none';
+                    document.getElementById('partnershipBox').style.display = 'flex';
+                }
+
+                this.update();
+            },
+            update() {
+                // Read
+                STATE.income = parse(document.getElementById('annualIncome').value);
+                STATE.expenses = parse(document.getElementById('annualExpenses').value);
+                STATE.employees = parseInt(document.getElementById('employees').value);
+                STATE.avgSalary = parse(document.getElementById('avgSalary').value);
+                STATE.tradeLevy = parse(document.getElementById('tradeLevy').value);
+
+                STATE.isSme = document.getElementById('isSme').checked;
+                STATE.isNewIp = document.getElementById('isNewIp').checked;
+                STATE.isPartnership = document.getElementById('isPartnership').checked;
+                STATE.region = document.getElementById('region').value;
+                STATE.type = document.getElementById('businessType').value;
+                STATE.usnVatMode = document.querySelector('input[name="usnVatType"]:checked').value;
+
+                // Trade Levy (Retail + Capitals)
+                const isRetail = STATE.type === 'retail';
+                const isCapitals = STATE.region === 'moscow' || STATE.region === 'spb';
+                document.getElementById('tradeLevyArg').style.display = (isRetail && isCapitals) ? 'block' : 'none';
+                if (!(isRetail && isCapitals)) STATE.tradeLevy = 0;
+
+                // Startup Cost
+                const costBadge = document.getElementById('startupCostDisplay');
+                if (STATE.entity === 'ip') costBadge.innerText = 'Регистрация: 800 ₽ (Госпошлина)';
+                else costBadge.innerText = 'Регистрация: 4 000 ₽ (Госпошлина)';
+
+                // Regime Handling
+                document.querySelectorAll('.regime-option').forEach(r => {
+                    if (r.classList.contains('active')) STATE.regime = r.dataset.regime;
+                    r.onclick = () => {
+                        if (r.classList.contains('disabled')) return;
+                        document.querySelectorAll('.regime-option').forEach(x => x.classList.remove('active'));
+                        r.classList.add('active');
+                        this.update();
+                    }
+                });
+
+                const cfg = CONFIG[STATE.year];
+                const limitBroken = STATE.income > CONFIG.common.usn_hard_limit;
+
+                const opt6 = document.getElementById('optUsn6');
+                const opt15 = document.getElementById('optUsn15');
+
+                if (STATE.entity !== 'rep') {
+                    if (limitBroken) {
+                        opt6.classList.add('error');
+                        if (opt6.classList.contains('active')) this.setRegime('osno');
+                    } else if (STATE.isPartnership) {
+                        opt6.classList.add('disabled');
+                        if (opt6.classList.contains('active')) {
+                            document.getElementById('optUsn15').click();
+                            STATE.regime = 'usn_income_expenses';
+                        }
+                    } else {
+                        opt6.classList.remove('error'); opt6.classList.remove('disabled');
+                    }
+                    if (limitBroken) opt15.classList.add('error'); else opt15.classList.remove('error');
+                }
+
+                // USN Warning
+                const usnBox = document.getElementById('usnVatBox');
+                if (!limitBroken && STATE.income > cfg.usn_vat_threshold && STATE.regime.includes('usn')) {
+                    usnBox.style.display = 'block';
+                    document.getElementById('usnVatThresholdDisplay').innerText = (cfg.usn_vat_threshold / 1000000).toFixed(0);
+                } else usnBox.style.display = 'none';
+
+                // SME NOTE
+                const smeNote = document.getElementById('smeBenefitNote');
+                const isPriority = (STATE.type === 'production' || STATE.type === 'science');
+                if (STATE.year === 2026 && STATE.isSme && !isPriority && STATE.type !== 'it') {
+                    smeNote.innerText = "Льгота отменена (2026)"; smeNote.style.color = 'var(--danger)';
+                } else if (STATE.isSme && STATE.entity !== 'rep') { smeNote.innerText = "Льгота 15% активна"; smeNote.style.color = 'var(--success)'; }
+                else smeNote.innerText = "";
+
+                const res = LOGIC.calc(STATE);
+                const activeRes = res[STATE.regime];
+
+                // Render Results
+                document.getElementById('totalDisplay').innerText = activeRes.error ? "—" : FORMATTER.format(activeRes.total);
+                document.getElementById('mainTaxDisplay').innerText = activeRes.error ? "—" : FORMATTER.format(activeRes.main);
+
+                // Dividends
+                const rowDiv = document.getElementById('rowDiv');
+                if (activeRes.div > 0) {
+                    rowDiv.style.display = 'flex';
+                    const divRate = (activeRes.divRate * 100).toFixed(0);
+                    document.getElementById('divRateDisplay').innerText = divRate;
+                    document.getElementById('divTaxDisplay').innerText = FORMATTER.format(activeRes.div);
+                } else rowDiv.style.display = 'none';
+
+                const ipFixed = STATE.entity === 'ip' ? (53658 + Math.max(0, (STATE.income - 300000) * 0.01)) : 0;
+                const empIns = activeRes.ins - ipFixed;
+                const rowIp = document.getElementById('rowInsIp');
+                if (STATE.entity === 'ip') {
+                    rowIp.style.display = 'flex';
+                    document.getElementById('insIpDisplay').innerText = FORMATTER.format(ipFixed);
+                    document.getElementById('insEmpDisplay').innerText = FORMATTER.format(empIns);
+                } else {
+                    rowIp.style.display = 'none';
+                    document.getElementById('insEmpDisplay').innerText = FORMATTER.format(activeRes.ins || 0);
+                }
+
+                const rowVat = document.getElementById('rowVat');
+                if (activeRes.vat > 0) {
+                    rowVat.style.display = 'flex';
+                    document.getElementById('vatDisplay').innerText = FORMATTER.format(activeRes.vat);
+                } else rowVat.style.display = 'none';
+
+                // Table
+                const tbody = document.getElementById('compBody');
+                tbody.innerHTML = '';
+                let min = Infinity;
+                Object.values(res).forEach(v => { if (!v.error && v.total < min) min = v.total; });
+
+                const names = { usn_income: 'УСН 6%', usn_income_expenses: 'УСН 15%', osno: 'ОСНО', patent: 'Патент', eshn: 'ЕСХН' };
+                Object.entries(res).forEach(([k, v]) => {
+                    const tr = document.createElement('tr');
+                    const isBest = !v.error && v.total === min;
+                    if (isBest) tr.classList.add('row-best');
+                    let badgesStr = (v.badges || []).map(b => `<span class="badge ${b.includes('0%') || b.includes('Вычет') ? 'badge-purple' : 'badge-danger'}">${b}</span>`).join(' ');
+                    if (isBest) badgesStr += ` <span class="badge badge-success">Выгодно</span>`;
+
+                    tr.innerHTML = `
+                        <td>${names[k]}</td>
+                        <td style="font-weight:600">${v.error ? '<span style="color:var(--danger)">' + v.error + '</span>' : FORMATTER.format(v.total)}</td>
+                        <td>${v.error ? '' : ((v.total / STATE.income) * 100).toFixed(1) + '%'}</td>
+                        <td style="font-size:0.75rem">${badgesStr}</td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+
+                // Insights
+                const insight = document.getElementById('insightBox');
+                let inHtml = "";
+                let hasContent = false;
+
+                if (STATE.income > CONFIG.common.usn_hard_limit && STATE.regime.includes('usn')) {
+                    inHtml = `<div class="insight-header">⚠️ Право на УСН утрачено (ст. 346.13)</div>
+                    <div class="insight-text">Ваш доход превысил 450 млн руб.</div>`;
+                    hasContent = true;
+                } else if (STATE.regime.includes('usn')) {
+                    // Logic to see if we have actual insights
+                    let listItems = "";
+                    if (STATE.isPartnership) listItems += `<li><b>Товарищество:</b> Разрешен только объект "Доходы - Расходы" (ст. 346.14).</li>`;
+                    if (STATE.type === 'retail' && (STATE.region === 'moscow' || STATE.region === 'spb') && STATE.tradeLevy > 0) {
+                        listItems += `<li><b>Торговый сбор:</b> Уменьшает налог (при УСН 6%) или расход (УСН 15%).</li>`;
+                    }
+
+                    if (listItems) {
+                        inHtml = `<div class="insight-header">💡 Важные нюансы</div>
+                        <div class="insight-text"><ul>${listItems}</ul></div>`;
+                        hasContent = true;
+                    }
+                }
+
+                insight.innerHTML = inHtml;
+                insight.style.display = hasContent ? 'block' : 'none';
+            },
+            setRegime(r) {
+                document.querySelectorAll('.regime-option').forEach(x => x.classList.remove('active'));
+                document.querySelector(`[data-regime="${r}"]`).classList.add('active');
+                STATE.regime = r;
+                this.update();
             }
-          });
-          renderPeople();
-          renderItems();
-          calculateAndRender();
+        };
+
+        // Init
+        document.querySelectorAll('input[type="text"]').forEach(input => {
+            input.addEventListener('blur', e => e.target.value = FORMATTER.format(parse(e.target.value)));
         });
-
-        row.appendChild(name);
-        row.appendChild(paid);
-        row.appendChild(del);
-        dom.people.appendChild(row);
-      });
-    }
-
-    function renderChipSelector(container, item) {
-      container.innerHTML = '';
-      const chipBox = document.createElement('div');
-      chipBox.className = 'chipbox';
-
-      const allIds = state.people.map(p => p.id);
-      const current = new Set(Array.isArray(item.sharedByIds) ? item.sharedByIds : []);
-
-      allIds.forEach((pid) => {
-        const person = state.people.find(p => p.id === pid);
-        const chip = document.createElement('label');
-        chip.className = 'chip';
-        const cb = document.createElement('input');
-        cb.type = 'checkbox';
-        cb.checked = current.has(pid);
-        cb.addEventListener('change', () => {
-          if (cb.checked) current.add(pid);
-          else current.delete(pid);
-          item.sharedByIds = Array.from(current);
-          if (!item.sharedByIds.length) {
-            cb.checked = true;
-            current.add(pid);
-            item.sharedByIds = Array.from(current);
-            showToast('An item must be shared by at least 1 person');
-          }
-          calculateAndRender();
-        });
-
-        const text = document.createElement('span');
-        text.textContent = person ? person.name : 'Person';
-
-        chip.appendChild(cb);
-        chip.appendChild(text);
-        chipBox.appendChild(chip);
-      });
-
-      container.appendChild(chipBox);
-    }
-
-    function renderItems() {
-      dom.items.innerHTML = '';
-      state.items.forEach((it) => {
-        const row = document.createElement('div');
-        row.className = 'row items';
-
-        const desc = document.createElement('input');
-        desc.type = 'text';
-        desc.value = it.desc;
-        desc.placeholder = 'Description (e.g., Pizza)';
-        desc.addEventListener('input', () => {
-          it.desc = desc.value;
-          setHashFromState();
-        });
-
-        const amount = document.createElement('input');
-        amount.type = 'number';
-        amount.step = '0.01';
-        amount.min = '0';
-        amount.value = String(it.amount || 0);
-        amount.addEventListener('input', () => {
-          it.amount = Number(amount.value) || 0;
-          calculateAndRender();
-        });
-
-        const paidBy = document.createElement('select');
-        state.people.forEach(p => {
-          const opt = document.createElement('option');
-          opt.value = p.id;
-          opt.textContent = p.name;
-          paidBy.appendChild(opt);
-        });
-        if (!state.people.some(p => p.id === it.paidById) && state.people[0]) {
-          it.paidById = state.people[0].id;
-        }
-        paidBy.value = it.paidById;
-        paidBy.addEventListener('change', () => {
-          it.paidById = paidBy.value;
-          calculateAndRender();
-        });
-
-        const sharedWrap = document.createElement('div');
-        sharedWrap.className = 'col-span';
-        renderChipSelector(sharedWrap, it);
-
-        const del = document.createElement('button');
-        del.className = 'danger';
-        del.type = 'button';
-        del.textContent = '×';
-        del.title = 'Remove item';
-        del.addEventListener('click', () => {
-          const idx = state.items.findIndex(x => x.id === it.id);
-          if (idx >= 0) state.items.splice(idx, 1);
-          renderItems();
-          calculateAndRender();
-        });
-
-        row.appendChild(desc);
-        row.appendChild(amount);
-        row.appendChild(paidBy);
-        row.appendChild(sharedWrap);
-        row.appendChild(del);
-        dom.items.appendChild(row);
-      });
-    }
-
-    function compute() {
-      normalizePeople();
-      const idxById = safePeopleIndexById();
-
-      const paid = new Array(state.people.length).fill(0);
-      const share = new Array(state.people.length).fill(0);
-
-      let subtotal = 0;
-      for (const it of state.items) {
-        const amt = Math.max(0, Number(it.amount) || 0);
-        subtotal += amt;
-
-        const payerIndex = idxById.get(it.paidById);
-        if (payerIndex !== undefined) {
-          paid[payerIndex] += amt;
-        }
-
-        const sharedIds = Array.isArray(it.sharedByIds) ? it.sharedByIds.filter(id => idxById.has(id)) : [];
-        const n = sharedIds.length || 0;
-        if (n > 0) {
-          const per = amt / n;
-          for (const pid of sharedIds) {
-            const si = idxById.get(pid);
-            if (si !== undefined) share[si] += per;
-          }
-        }
-      }
-
-      const tipPct = Math.max(0, Number(state.tipPct) || 0) / 100;
-      const taxPct = Math.max(0, Number(state.taxPct) || 0) / 100;
-      const extrasTotal = subtotal * (tipPct + taxPct);
-
-      const extraFactor = subtotal > 0 ? (extrasTotal / subtotal) : 0;
-      for (let i = 0; i < share.length; i++) {
-        share[i] += share[i] * extraFactor;
-      }
-
-      for (let i = 0; i < state.people.length; i++) {
-        paid[i] += Math.max(0, Number(state.people[i].paid) || 0);
-      }
-
-      const net = paid.map((p, i) => p - share[i]);
-
-      const step = state.rounding === 'none' ? 0 : Number(state.rounding);
-      let netRounded = net.slice();
-      if (step && step > 0) {
-        netRounded = netRounded.map(v => roundTo(v, step));
-        const sum = netRounded.reduce((a, b) => a + b, 0);
-        const drift = -sum;
-        if (Math.abs(drift) >= 0.000001) {
-          const target = drift > 0
-            ? netRounded.map((v, i) => ({ i, v })).sort((a, b) => a.v - b.v)[0]
-            : netRounded.map((v, i) => ({ i, v })).sort((a, b) => b.v - a.v)[0];
-          netRounded[target.i] += drift;
-        }
-      }
-
-      const total = subtotal + extrasTotal;
-
-      return {
-        subtotal,
-        extrasTotal,
-        total,
-        paid,
-        share,
-        net: netRounded,
-        netUnrounded: net,
-      };
-    }
-
-    function buildSettlement(people, net) {
-      const eps = 0.005;
-      const creditors = [];
-      const debtors = [];
-
-      for (let i = 0; i < people.length; i++) {
-        const v = net[i];
-        if (v > eps) creditors.push({ i, amt: v });
-        else if (v < -eps) debtors.push({ i, amt: -v });
-      }
-
-      creditors.sort((a, b) => b.amt - a.amt);
-      debtors.sort((a, b) => b.amt - a.amt);
-
-      const tx = [];
-      let ci = 0;
-      let di = 0;
-
-      while (ci < creditors.length && di < debtors.length) {
-        const c = creditors[ci];
-        const d = debtors[di];
-        const x = Math.min(c.amt, d.amt);
-        if (x > eps) {
-          tx.push({ from: people[d.i].name, to: people[c.i].name, amount: x });
-          c.amt -= x;
-          d.amt -= x;
-        }
-        if (c.amt <= eps) ci++;
-        if (d.amt <= eps) di++;
-      }
-
-      return tx;
-    }
-
-    function calculateAndRender() {
-      state.tipPct = Number(dom.tipPct.value) || 0;
-      state.taxPct = Number(dom.taxPct.value) || 0;
-      state.rounding = dom.rounding.value || 'none';
-
-      const res = compute();
-
-      dom.kpiSubtotal.textContent = money(res.subtotal);
-      dom.kpiExtras.textContent = money(res.extrasTotal);
-      dom.kpiTotal.textContent = money(res.total);
-
-      dom.resultTableBody.innerHTML = '';
-      for (let i = 0; i < state.people.length; i++) {
-        const tr = document.createElement('tr');
-        const net = res.net[i];
-        const cls = Math.abs(net) < 0.01 ? 'ok' : (net > 0 ? 'ok' : 'bad');
-
-        const tdName = document.createElement('td');
-        tdName.textContent = state.people[i].name;
-
-        const tdPaid = document.createElement('td');
-        tdPaid.className = 'right';
-        tdPaid.textContent = money(res.paid[i]);
-
-        const tdShare = document.createElement('td');
-        tdShare.className = 'right';
-        tdShare.textContent = money(res.share[i]);
-
-        const tdNet = document.createElement('td');
-        tdNet.className = `right ${cls}`;
-        tdNet.textContent = money(net);
-
-        tr.appendChild(tdName);
-        tr.appendChild(tdPaid);
-        tr.appendChild(tdShare);
-        tr.appendChild(tdNet);
-        dom.resultTableBody.appendChild(tr);
-      }
-
-      const sumNet = res.net.reduce((a, b) => a + b, 0);
-      dom.balanceNote.textContent = Math.abs(sumNet) < 0.01
-        ? 'Balanced: nets sum to 0.'
-        : `Note: nets sum to ${money(sumNet)} (rounding or incomplete data).`;
-
-      const tx = buildSettlement(state.people, res.net);
-      dom.settlementList.innerHTML = '';
-      if (!tx.length) {
-        const li = document.createElement('li');
-        li.textContent = 'No transfers needed.';
-        dom.settlementList.appendChild(li);
-      } else {
-        tx.forEach(t => {
-          const li = document.createElement('li');
-          li.textContent = `${t.from} pays ${t.to}: ${money(t.amount)}`;
-          dom.settlementList.appendChild(li);
-        });
-      }
-
-      dom.settlementMeta.textContent = `Transfers: ${tx.length}. People: ${state.people.length}. Items: ${state.items.length}.`;
-
-      setHashFromState();
-    }
-
-    function resetApp() {
-      state.people = [];
-      state.items = [];
-      state.tipPct = 0;
-      state.taxPct = 0;
-      state.rounding = 'none';
-      dom.tipPct.value = '0';
-      dom.taxPct.value = '0';
-      dom.rounding.value = 'none';
-      addPerson('Person 1', 0);
-      addPerson('Person 2', 0);
-      addItem('Item 1', 0, state.people[0].id, state.people.map(p => p.id));
-      renderPeople();
-      renderItems();
-      calculateAndRender();
-      dom.shareStatus.textContent = 'No shared link loaded';
-      history.replaceState(null, '', window.location.pathname);
-      showToast('Reset done');
-    }
-
-    function initFromHashIfPresent() {
-      const snap = decodeHash(window.location.hash);
-      if (!snap) return false;
-      const ok = applySnapshot(snap);
-      if (ok) {
-        dom.shareStatus.textContent = 'Loaded from shared link';
-        return true;
-      }
-      return false;
-    }
-
-    function init() {
-      const loaded = initFromHashIfPresent();
-      if (!loaded) {
-        addPerson('Person 1', 0);
-        addPerson('Person 2', 0);
-        addItem('Item 1', 0, null, null);
-      }
-
-      dom.tipPct.value = String(state.tipPct);
-      dom.taxPct.value = String(state.taxPct);
-      dom.rounding.value = String(state.rounding);
-
-      renderPeople();
-      renderItems();
-      calculateAndRender();
-    }
-
-    dom.btnAddPerson.addEventListener('click', () => {
-      addPerson(`Person ${state.people.length + 1}`, 0);
-      state.items.forEach(it => {
-        if (!Array.isArray(it.sharedByIds)) it.sharedByIds = [];
-        if (!it.sharedByIds.includes(state.people[state.people.length - 1].id)) {
-          it.sharedByIds.push(state.people[state.people.length - 1].id);
-        }
-      });
-      renderPeople();
-      renderItems();
-      calculateAndRender();
-    });
-
-    dom.btnAddItem.addEventListener('click', () => {
-      addItem(`Item ${state.items.length + 1}`, 0, null, null);
-      renderItems();
-      calculateAndRender();
-    });
-
-    dom.btnCalculate.addEventListener('click', () => {
-      calculateAndRender();
-      showToast('Recalculated');
-    });
-
-    dom.btnCopyLink.addEventListener('click', () => {
-      copyShareLink();
-    });
-
-    dom.btnReset.addEventListener('click', () => {
-      resetApp();
-    });
-
-    const btnCalculateMobile = document.getElementById('btnCalculateMobile');
-    const btnCopyLinkMobile = document.getElementById('btnCopyLinkMobile');
-    const btnResetMobile = document.getElementById('btnResetMobile');
-
-    if (btnCalculateMobile) {
-      btnCalculateMobile.addEventListener('click', () => {
-        calculateAndRender();
-        showToast('Recalculated');
-      });
-    }
-
-    if (btnCopyLinkMobile) {
-      btnCopyLinkMobile.addEventListener('click', () => {
-        copyShareLink();
-      });
-    }
-
-    if (btnResetMobile) {
-      btnResetMobile.addEventListener('click', () => {
-        resetApp();
-      });
-    }
-
-    dom.tipPct.addEventListener('input', () => calculateAndRender());
-    dom.taxPct.addEventListener('input', () => calculateAndRender());
-    dom.rounding.addEventListener('change', () => calculateAndRender());
-
-    window.addEventListener('hashchange', () => {
-      const loaded = initFromHashIfPresent();
-      if (loaded) {
-        renderPeople();
-        renderItems();
-        calculateAndRender();
-        showToast('Loaded from link');
-      }
-    });
-
-    init();
-  </script>
+        window.onload = () => UI.update();
+    </script>
 </body>
+
 </html>
